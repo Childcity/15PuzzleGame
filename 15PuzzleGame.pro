@@ -19,10 +19,12 @@ RESOURCES += qml.qrc
 INCLUDEPATH += src/
 
 HEADERS += \
-	src/main.h
+	src/main.h \
+    src/gameboardmodel.h
 
 SOURCES += \
-	src/main.cpp
+	src/main.cpp \
+    src/gameboardmodel.cpp
 
 Release:DESTDIR = release
 Release:OBJECTS_DIR = release/obj

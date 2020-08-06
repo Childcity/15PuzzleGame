@@ -19,7 +19,7 @@ struct DebugPrinter {
     }
 };
 
-#define DEBUG(msg_) qDebug() << DebugPrinter(__FILE__, __LINE__) << msg_ << "<"
+#define DEBUG(msg_) qDebug() << DebugPrinter(__FILE__, __LINE__) << msg_ << "<";
 //#define DEBUGGAM(msg_) // Off debug
 
 #endif // MAIN_H
