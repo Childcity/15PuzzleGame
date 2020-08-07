@@ -33,6 +33,6 @@ Release:RCC_DIR = release/rcc
 Release:UI_DIR = release/ui
 
 unix {
-	# If it is unix* OS -> define flag 'no-pie' to build executable (see: https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html)
-	QMAKE_LFLAGS += -no-pie
+    # If it is unix* OS -> define flag 'no-pie' to build executable (see: https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html)
+    QMAKE_LFLAGS += -no-pie
 }
