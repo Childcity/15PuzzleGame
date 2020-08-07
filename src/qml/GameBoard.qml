@@ -10,6 +10,9 @@ GridView {
 
 
     model: GameBoardModel {
+        onSigGameWon: {
+            wonTxt.visible = true
+        }
     }
 
     delegate: Item {
@@ -22,13 +25,35 @@ GridView {
             anchors.fill: backgroundDelegate
             anchors.margins: 5
             tileText: model.display
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    root.model.move(index)
+                }
+            }
         }
     }
-    MouseArea {
-        anchors.fill: root
-        onClicked: {
-            console.log(root.model.dimension)
-            model.dimension = ++model.dimension
+
+    GameWon {
+        id: wonTxt
+        anchors.centerIn: root
+        width: root.width - root.width / 8
+        height: root.height - root.height / 2
+        visible: false
+
+        MouseArea {
+            anchors.fill: wonTxt
+
+            onClicked: {
+                wonTxt.visible = false
+                mouse.accepted = true
+            }
         }
     }
+
 }
+
+//1 2 3
+//  5 6
+//7 8 9

@@ -17,9 +17,11 @@ Rectangle {
         text: tileText
         anchors.centerIn: root
         font {
-            pointSize: root.width !== 0 && root.height !== 0
-                       ? Math.min(root.width, root.height) / 3
-                       : 1
+            pointSize: {
+                var ps = Math.min(root.width, root.height) / 3
+                return ps > 1 ? ps : 1
+            }
+
             family: "Ubuntu"
             bold: true
         }
