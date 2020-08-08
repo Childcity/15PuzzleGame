@@ -13,6 +13,7 @@ class GameBoardModel : public QAbstractListModel {
 
     Q_PROPERTY(int dimension READ dimension WRITE setDimension NOTIFY sigDimensionChanged)
     Q_PROPERTY(int hiddenIndex READ hiddenIndex CONSTANT)
+    Q_PROPERTY(bool isGameWon READ isGameWon NOTIFY sigGameWonChanged)
 
     struct TileData final {
         int Value {};
@@ -31,6 +32,9 @@ class GameBoardModel : public QAbstractListModel {
         }
         bool operator<(const TileData &other) const {
             return Value < other.Value;
+        }
+        bool operator>(const TileData &other) const {
+            return Value > other.Value;
         }
         TileData(TileData &&other) noexcept
             : Value(std::move(other.Value)) {
@@ -75,6 +79,14 @@ public:
 
     int hiddenIndex() const { return hiddenIndex_; }
 
+    int hiddenValue() const { return 0; }
+
+    bool isGameWon() const
+    {
+      return boardElements_.first().Value != hiddenValue()
+             && std::is_sorted(boardElements_.begin(), boardElements_.end() - 1);
+    }
+
 public slots:
     void setDimension(int dimension)
     {
@@ -104,13 +116,13 @@ public slots:
         endResetModel();
 
         if (isGameWon())
-            emit sigGameWon();
+            emit sigGameWonChanged(true);
     }
 
 signals:
     void sigDimensionChanged();
 
-    void sigGameWon();
+    void sigGameWonChanged(bool isGameWon);
 
 private:
     Position getRowCol(int index) const { return {index / defaultDimension_, index % defaultDimension_}; }
@@ -121,16 +133,13 @@ private:
         {
             boardElements_.resize(dimension_ * dimension_);
 
-            // fill with 1,2,3,4,5...
-            std::iota(boardElements_.begin(), boardElements_.end(), 1);
+            // fill with 1,2,3,4,5,...,0
+            std::iota(boardElements_.begin(), boardElements_.end() - 1, 1);
+            boardElements_.last() = hiddenValue();
 
-            const auto hiddenElement = boardElements_.last();
             shaffleBoard();
 
-            // find and update hidden index
-            const auto it = std::find(boardElements_.begin(), boardElements_.end(), hiddenElement);
-            assert(it != boardElements_.end());
-            hiddenIndex_ = static_cast<int>(std::distance(boardElements_.begin(), it));
+            hiddenIndex_ = findHiddenIndex();
         }
         endResetModel();
     }
@@ -144,7 +153,7 @@ private:
         do {
             std::shuffle(boardElements_.begin(), boardElements_.end(), generator);
             DEBUG("isBoardSolvable" <<isBoardSolvable())
-        } while (! isBoardSolvable());
+        } while ((! isBoardSolvable()) || isGameWon());
     }
 
     bool isMovable(Position pos) const
@@ -158,38 +167,44 @@ private:
 
     bool isBoardSolvable() const
     {
-        // https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
-        int parity = 0;
-
-        int row = 0; // the current row we are on
-        int blankRow = 0; // the row with the blank tile
-
-        for (int i = 0; i < dimension_; i++) {
-            if (i % dimension_ == 0) { // advance to next row
-                row++;
-            }
-            if (boardElements_[i].Value == 0) { // the blank tile
-                blankRow = row; // save the row on which encountered
-                continue;
-            }
-            for (int j = i + 1; j < dimension_; j++) {
-                if (boardElements_[i].Value > boardElements_[j].Value && boardElements_[j].Value != 0)
-                    parity++;
-            }
+      // Count inversions in given puzzle
+      int invCount = 0;
+      for (int i = 0; i < boardElements_.size() - 1; i++)
+      {
+        for (int j = i + 1; j < boardElements_.size(); j++)
+        {
+          // count pairs(i, j) such that i appears
+          // before j, but i > j.
+          if (boardElements_[j].Value && boardElements_[i].Value
+              && boardElements_[i] > boardElements_[j])
+          {
+            invCount++;
+          }
         }
+      }
 
-        if (dimension_ % 2 == 0) { // even grid
-            if (blankRow % 2 == 0) { // blank on odd row; counting from bottom
-                return parity % 2 == 0;
-            } else { // blank on even row; counting from bottom
-                return parity % 2 != 0;
-            }
-        } else { // odd grid
-            return parity % 2 == 0;
-        }
+      auto isOdd = [](int val){ return (val & 1); };
+      auto isEven = [&isOdd](int val){ return ! isOdd(val); };
+
+      // If grid is odd, return true if inversion
+      // count is even.
+      if (isOdd(dimension_)) {
+        return isEven(invCount);
+      } else {
+        // grid is even
+        const int hiddenIndex = findHiddenIndex();
+        const int pos = getRowCol(hiddenIndex).first;
+        return isOdd(pos) ? isEven(invCount) : isOdd(invCount);
+      }
     }
 
-    bool isGameWon() { return std::is_sorted(boardElements_.begin(), boardElements_.end()); }
+    int findHiddenIndex() const
+    {
+      // find and update hidden index
+      const auto it = std::find(boardElements_.begin(), boardElements_.end(), TileData(hiddenValue()));
+      assert(it != boardElements_.end());
+      return static_cast<int>(std::distance(boardElements_.begin(), it));
+    }
 
 private:
     static constexpr int defaultDimension_ = 2;
