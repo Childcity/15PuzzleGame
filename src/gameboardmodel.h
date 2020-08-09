@@ -102,17 +102,25 @@ public slots:
 
     void move(int index)
     {
-        {
-            const Position posToMove = getRowCol(index);
-            if (! isMovable(posToMove))
-                return;
-        }
+        const Position posToMove = getRowCol(index);
+        if (! isMovable(posToMove))
+          return;
+
+        const Position hidPos = getRowCol(hiddenIndex());
+        DEBUG(boardElements_)
+        DEBUG("m:"<<posToMove <<"h:"<<hidPos)
 
         beginResetModel();
         {
-            boardElements_[index].swap(boardElements_[hiddenIndex_]);
-            hiddenIndex_ = index;
+          if (posToMove.first == hidPos.first) {
+            // move by raw
+            for (int i = hidPos.second; i > posToMove.second; --i) {
+              boardElements_[getIndex({posToMove.first,2})].swap(boardElements_[hiddenIndex_]);
+              hiddenIndex_ = index--;
+            }
+          }
         }
+
         endResetModel();
 
         if (isGameWon())
@@ -125,7 +133,9 @@ signals:
     void sigGameWonChanged(bool isGameWon);
 
 private:
-    Position getRowCol(int index) const { return {index / defaultDimension_, index % defaultDimension_}; }
+    Position getRowCol(int index) const { return {index / dimension_, index % dimension_}; }
+
+    int getIndex(Position pos) const { return pos.first * dimension_ + pos.second; }
 
     void updateBoard()
     {
@@ -159,10 +169,7 @@ private:
     bool isMovable(Position pos) const
     {
         const Position hidPos = getRowCol(hiddenIndex());
-        return  // for Column condition (if culumn the same)
-                (pos.second == hidPos.second && ((pos.first - 1) == hidPos.first || (pos.first + 1) == hidPos.first))
-                // for Raw condition (if raw the same)
-                || (pos.first == hidPos.first && ((pos.second - 1) == hidPos.second || (pos.second + 1) == hidPos.second));
+        return  pos.second == hidPos.second || pos.first == hidPos.first;
     }
 
     bool isBoardSolvable() const
@@ -207,7 +214,7 @@ private:
     }
 
 private:
-    static constexpr int defaultDimension_ = 2;
+    static constexpr int defaultDimension_ = 3;
 
     int dimension_;
     int hiddenIndex_;
