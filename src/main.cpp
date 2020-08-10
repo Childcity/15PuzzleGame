@@ -1,7 +1,8 @@
-#include "gameboardmodel.h"
+#include "dal/gameboardmodel.h"
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QVector>
 
 int main(int argc, char *argv[])
 {
@@ -9,7 +10,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     {
-        qmlRegisterType<GameBoardModel>("GameBoardModel", 1,0, "GameBoardModel");
+        qmlRegisterType<DAL::GameBoardModel>("GameBoardModel", 1,0, "GameBoardModel");
     }
 
     QQmlApplicationEngine engine;

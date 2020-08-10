@@ -2,11 +2,15 @@
 #define GAMEBOARDMODEL_H
 
 #include "main.h"
+#include "tiledata.h"
 
 #include <QAbstractListModel>
 #include <QObject>
 #include <algorithm>
 #include <random>
+
+namespace DAL {
+
 
 class GameBoardModel : public QAbstractListModel {
     Q_OBJECT
@@ -15,38 +19,6 @@ class GameBoardModel : public QAbstractListModel {
     Q_PROPERTY(int hiddenIndex READ hiddenIndex CONSTANT)
     Q_PROPERTY(bool isGameWon READ isGameWon NOTIFY sigGameWonChanged)
 
-    struct TileData final {
-        int Value {};
-        explicit TileData() = default;
-        explicit TileData(int val)
-            : Value(val)
-        {}
-        TileData(const TileData &) = default;
-        TileData & operator=(const TileData &) = delete;
-        TileData & operator=(const int &val) {
-            Value = val;
-            return *this;
-        }
-        bool operator==(const TileData &other) const {
-            return Value == other.Value;
-        }
-        bool operator<(const TileData &other) const {
-            return Value < other.Value;
-        }
-        bool operator>(const TileData &other) const {
-            return Value > other.Value;
-        }
-        TileData(TileData &&other) noexcept
-            : Value(std::move(other.Value)) {
-            other.Value = 0;
-        }
-        void swap(TileData &other) noexcept { std::swap(Value, other.Value); }
-        void friend swap(TileData &l, TileData &r) noexcept { l.swap(r); }
-        friend QDebug & operator<<(QDebug &stream, const TileData &other) {
-            stream << other.Value;
-            return stream;
-        }
-    };
 
     using Position = std::pair<int, int>;
 
@@ -74,10 +46,13 @@ public:
         return value;
     }
 
+    enum class ShiftDirection {Right, Left, Top, Bottom};
+    Q_ENUM(ShiftDirection)
+
 public:
     int dimension() const { return dimension_; }
 
-    int hiddenIndex() const { return hiddenIndex_; }
+    int hiddenIndex() const { return findHiddenIndex(); }
 
     int hiddenValue() const { return 0; }
 
@@ -103,24 +78,30 @@ public slots:
     void move(int index)
     {
         const Position posToMove = getRowCol(index);
-        if (! isMovable(posToMove))
+        const Position hidPos = getRowCol(hiddenIndex());
+
+        if (! isMovable(posToMove, hidPos))
           return;
 
-        const Position hidPos = getRowCol(hiddenIndex());
         DEBUG(boardElements_)
         DEBUG("m:"<<posToMove <<"h:"<<hidPos)
 
         beginResetModel();
         {
-          if (posToMove.first == hidPos.first) {
-            // move by raw
-            for (int i = hidPos.second; i > posToMove.second; --i) {
-              boardElements_[getIndex({posToMove.first,2})].swap(boardElements_[hiddenIndex_]);
-              hiddenIndex_ = index--;
-            }
-          }
-        }
+            ShiftDirection direction{};
+            int count{};
 
+            if (posToMove.first == hidPos.first) { // shift Left/Right
+                count = posToMove.second - hidPos.second;
+                direction = count > 0 ? ShiftDirection::Right : ShiftDirection::Left;
+            } else if (posToMove.second == hidPos.second) { // shift Top/Bottom
+                count = posToMove.first - hidPos.first;
+                direction = count > 0 ? ShiftDirection::Bottom : ShiftDirection::Top;
+            }
+
+            count = count > 0 ? count : -count;
+            shift2D(boardElements_, hidPos, count, direction);
+        }
         endResetModel();
 
         if (isGameWon())
@@ -148,8 +129,6 @@ private:
             boardElements_.last() = hiddenValue();
 
             shaffleBoard();
-
-            hiddenIndex_ = findHiddenIndex();
         }
         endResetModel();
     }
@@ -166,9 +145,8 @@ private:
         } while ((! isBoardSolvable()) || isGameWon());
     }
 
-    bool isMovable(Position pos) const
+    bool isMovable(Position pos, Position hidPos) const
     {
-        const Position hidPos = getRowCol(hiddenIndex());
         return  pos.second == hidPos.second || pos.first == hidPos.first;
     }
 
@@ -213,12 +191,57 @@ private:
       return static_cast<int>(std::distance(boardElements_.begin(), it));
     }
 
+    void shift2D(QVector<TileData> &vec, Position strPos, int count, ShiftDirection direction)
+    {
+        int row, col;
+        std::tie(row, col) = strPos;
+
+        assert(row < dimension_);
+        assert(col < dimension_);
+
+        if (direction == ShiftDirection::Right) {
+            int strtIndx = col + 1;
+            int endIndx = col + count;
+            assert(endIndx < dimension_);
+
+            for (int i = strtIndx; i <= endIndx; ++i) {
+                vec[getIndex({row, i - 1})].swap(vec[getIndex({row, i})]);
+            }
+        } else if (direction == ShiftDirection::Left) {
+            int strtIndx = col - 1;
+            int endIndx = col - count;
+            assert(endIndx >= 0);
+
+            for (int i = strtIndx; i >= endIndx; --i) {
+                vec[getIndex({row, i + 1})].swap(vec[getIndex({row, i})]);
+            }
+        } else if (direction == ShiftDirection::Bottom) {
+            int strtIndx = row + 1;
+            int endIndx = row + count;
+            assert(endIndx < dimension_);
+
+            for (int i = strtIndx; i <= endIndx; ++i) {
+                vec[getIndex({i - 1, col})].swap(vec[getIndex({i, col})]);
+            }
+        } else if (direction == ShiftDirection::Top) {
+            int strtIndx = row - 1;
+            int endIndx = row - count;
+            assert(endIndx >= 0);
+
+            for (int i = strtIndx; i >= endIndx; --i) {
+                vec[getIndex({i + 1, col})].swap(vec[getIndex({i, col})]);
+            }
+        }
+    }
+
 private:
-    static constexpr int defaultDimension_ = 3;
+    static constexpr int defaultDimension_ = 4;
 
     int dimension_;
-    int hiddenIndex_;
     QVector<TileData> boardElements_;
 };
+
+
+}
 
 #endif // GAMEBOARDMODEL_H
