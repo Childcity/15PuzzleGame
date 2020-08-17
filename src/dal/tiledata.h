@@ -10,6 +10,8 @@ namespace DAL {
 struct TileData final {
     int Value {};
 
+    int Image {};
+
     explicit TileData() = default;
 
     explicit TileData(int val);

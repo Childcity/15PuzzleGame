@@ -10,9 +10,10 @@ GridView {
 
 
     model: GameBoardModel {
-        onSigGameWonChanged: {
-            wonTxt.visible = isGameWon
-        }
+        //onSigGameWonChanged: {
+        //    // arg1: isGameWon
+        //    wonTxt.visible = isGameWon
+        //}
     }
 
     delegate: Item {
@@ -46,7 +47,8 @@ GridView {
             anchors.fill: wonTxt
 
             onClicked: {
-                wonTxt.visible = false
+                root.model.dimension++
+                root.model.dimension--
                 mouse.accepted = true
             }
         }

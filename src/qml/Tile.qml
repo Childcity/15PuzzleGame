@@ -26,4 +26,9 @@ Rectangle {
             bold: true
         }
     }
+
+    Image {
+        id: img
+        source: "file"
+    }
 }

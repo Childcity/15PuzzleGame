@@ -16,6 +16,9 @@ class Board {
     enum class ShiftDirection { Right, Left, Top, Bottom };
 
 public:
+    using Ptr = std::unique_ptr<Board>;
+
+public:
     Board(int dimension = defaultDimension_)
         : dimension_(dimension)
     {
@@ -56,6 +59,10 @@ public:
         shift2D(boardElements_, hidPos, count, direction);
     }
 
+    int tilesNumber() const { return boardElements_.size(); }
+
+    int dimension() const { return dimension_; }
+
     int hiddenValue() const { return 0; }
 
     int hiddenIndex() const { return findHiddenIndex(); }
@@ -76,6 +83,8 @@ public:
       return boardElements_.first().Value != hiddenValue()
              && std::is_sorted(boardElements_.begin(), boardElements_.end() - 1);
     }
+
+    TileData operator[](int index) { return boardElements_.at(index); }
 
 private:
     Position getRowCol(int index) const { return {index / dimension_, index % dimension_}; }
@@ -179,7 +188,7 @@ private:
     }
 
 private:
-    static constexpr int defaultDimension_ = 4;
+    static constexpr int defaultDimension_ = 2;
 
     int dimension_;
     QVector<TileData> boardElements_;
