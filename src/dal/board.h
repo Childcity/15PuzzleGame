@@ -11,7 +11,6 @@ namespace DAL {
 
 
 class Board {
-
     using Position = std::pair<int, int>;
 
     enum class ShiftDirection { Right, Left, Top, Bottom };
@@ -29,7 +28,48 @@ public:
         shaffleBoard();
     }
 
+    void move(int index)
+    {
+        const Position posToMove = getRowCol(index);
+        const Position hidPos = getRowCol(hiddenIndex());
+
+        ShiftDirection direction{};
+        int count{};
+
+        if (posToMove.first == hidPos.first) { // shift Left/Right
+            count = posToMove.second - hidPos.second;
+            // if count is positive, then posToMove to the Left of the hidden tile
+            // so we should move all tiles to the Right
+            // else to the Left
+            direction = count > 0 ? ShiftDirection::Right : ShiftDirection::Left;
+        } else if (posToMove.second == hidPos.second) { // shift Top/Bottom
+            count = posToMove.first - hidPos.first;
+            // if count is positive, then posToMove to the Top of the hidden tile
+            // so we should move all tiles to the Bottom
+            // else to the Top
+            direction = count > 0 ? ShiftDirection::Bottom : ShiftDirection::Top;
+        }
+
+        assert(count != 0);
+
+        count = count > 0 ? count : -count;
+        shift2D(boardElements_, hidPos, count, direction);
+    }
+
     int hiddenValue() const { return 0; }
+
+    int hiddenIndex() const { return findHiddenIndex(); }
+
+    bool isMovable(Position pos, Position hidPos) const
+    {
+        return  pos.second == hidPos.second || pos.first == hidPos.first;
+    }
+
+    bool isMovable(int index) const
+    {
+        return index >= 0 && index < boardElements_.size()
+                && isMovable(getRowCol(index), getRowCol(hiddenIndex()));
+    }
 
     bool isGameWon() const
     {
@@ -52,11 +92,6 @@ private:
             std::shuffle(boardElements_.begin(), boardElements_.end(), generator);
             //DEBUG("isBoardSolvable" <<isBoardSolvable())
         } while ((! isBoardSolvable()) || isGameWon());
-    }
-
-    bool isMovable(Position pos, Position hidPos) const
-    {
-        return  pos.second == hidPos.second || pos.first == hidPos.first;
     }
 
     bool isBoardSolvable() const
@@ -100,10 +135,10 @@ private:
       return static_cast<int>(std::distance(boardElements_.begin(), it));
     }
 
-    void shift2D(QVector<TileData> &vec, Position strPos, int count, ShiftDirection direction)
+    void shift2D(QVector<TileData> &vec, Position strtPos, int count, ShiftDirection direction)
     {
         int row, col;
-        std::tie(row, col) = strPos;
+        std::tie(row, col) = strtPos;
 
         assert(row < dimension_);
         assert(col < dimension_);

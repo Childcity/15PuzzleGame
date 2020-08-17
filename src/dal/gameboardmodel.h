@@ -81,10 +81,7 @@ public slots:
         const Position hidPos = getRowCol(hiddenIndex());
 
         if (! isMovable(posToMove, hidPos))
-          return;
-
-        DEBUG(boardElements_)
-        DEBUG("m:"<<posToMove <<"h:"<<hidPos)
+            return;
 
         beginResetModel();
         {
