@@ -37,7 +37,7 @@ public:
 
         if (index.isValid()) {
             if (role == Qt::DisplayRole) {
-                value = (*board_)[index.row()].Value;
+              value = QVariant::fromValue((*board_)[index.row()]);
             }
         }
 

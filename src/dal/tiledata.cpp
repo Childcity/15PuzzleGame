@@ -4,9 +4,17 @@
 
 namespace DAL {
 
+
+TileData::TileData()
+{
+    qRegisterMetaType<DAL::TileData>("DAL::TileData");
+}
+
 TileData::TileData(int val)
-    : Value(val)
-{}
+  : TileData()
+{
+    Value = val;
+}
 
 TileData::TileData(TileData &&other) noexcept
     : Value(std::move(other.Value))

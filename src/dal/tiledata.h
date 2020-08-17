@@ -3,16 +3,26 @@
 
 #include <memory>
 #include <QDebug>
+#include <QObject>
 
 namespace DAL {
 
 
-struct TileData final {
+struct TileData : public QObject {
+    Q_OBJECT
+
+    int m_value {};
+    Q_PROPERTY(int value MEMBER value NOTIFY valueChanged )
+
+signals:
+    void valueChanged(int value);
+
+public:
     int Value {};
 
-    int Image {};
+    QByteArray Image {"qdwqd"};
 
-    explicit TileData() = default;
+    explicit TileData();
 
     explicit TileData(int val);
 
@@ -41,5 +51,8 @@ struct TileData final {
 
 
 }
+
+Q_DECLARE_METATYPE(DAL::TileData);
+
 
 #endif // TILEDATA_H

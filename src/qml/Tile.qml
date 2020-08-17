@@ -29,6 +29,6 @@ Rectangle {
 
     Image {
         id: img
-        source: "file"
+        //source: "file"
     }
 }
