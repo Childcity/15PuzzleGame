@@ -2,12 +2,12 @@
 
 #include <memory>
 
-namespace DAL {
+namespace Dal {
 
 
 TileData::TileData()
 {
-    qRegisterMetaType<DAL::TileData>("DAL::TileData");
+    qRegisterMetaType<Dal::TileData>("Dal::TileData");
 }
 
 TileData::TileData(int val)
@@ -22,22 +22,13 @@ TileData::TileData(TileData &&other) noexcept
     other.Value = 0;
 }
 
-TileData & TileData::operator=(int val)
-{
-    Value = val;
-    return *this;
-}
-
 bool TileData::operator==(const TileData &other) const { return Value == other.Value; }
 
 bool TileData::operator<(const TileData &other) const { return Value < other.Value; }
 
 bool TileData::operator>(const TileData &other) const { return Value > other.Value; }
 
-void TileData::swap(TileData &other) noexcept
-{
-    std::swap(Value, other.Value);
-}
+void TileData::swap(TileData &other) noexcept { std::swap(Value, other.Value); }
 
 // Friend members
 

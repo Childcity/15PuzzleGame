@@ -4,6 +4,7 @@ import GameBoardModel 1.0
 
 Rectangle {
     id: root
+    color: "#66ffffff"
     radius: 15
     //width: txt.contentWidth + 20
     //height: txt.contentHeight + 20

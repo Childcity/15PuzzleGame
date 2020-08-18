@@ -1,13 +1,22 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include "main.h"
 #include "tiledata.h"
 
+#include <QEventLoop>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QTimer>
 #include <QVector>
 #include <algorithm>
+#include <qnetworkreply.h>
 #include <random>
+#include <QPixmap>
+#include <QBuffer>
 
-namespace DAL {
+namespace Dal {
 
 
 class Board {
@@ -22,11 +31,81 @@ public:
     Board(int dimension = defaultDimension_)
         : dimension_(dimension)
     {
+        QByteArray imgSrc;
+
+        {
+            auto makeRequest = [](QUrl url){
+                QNetworkAccessManager networkManager;
+                QEventLoop looper;
+                QTimer deadlineTimer;
+                deadlineTimer.setSingleShot(true);
+
+                QObject::connect(&networkManager, &QNetworkAccessManager::finished, &looper, &QEventLoop::quit );
+                QObject::connect(&deadlineTimer, &QTimer::timeout, &looper, &QEventLoop::quit);
+
+                QNetworkRequest request(url);
+                request.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) "
+                                                                    "AppleWebKit/600.7.12 (KHTML, like Gecko) "
+                                                                    "Version/8.0.7 Safari/600.7.12");
+                request.setMaximumRedirectsAllowed(10);
+                DEBUG("reaching url: " << url);
+                QNetworkReply *reply = networkManager.get(request);
+
+                deadlineTimer.start(3000);
+                looper.exec();
+
+                if (! deadlineTimer.isActive()){
+                    DEBUG("NetworkReply timed out!");
+                    return QByteArray();
+                }
+
+                DEBUG("get -> " << url << ", size: " << reply->bytesAvailable()
+                      <<"status: " <<reply->error()
+                      <<"deadlineTimer: "<<deadlineTimer.interval()-deadlineTimer.remainingTime());
+                reply->deleteLater();
+                return reply->readAll();
+            };
+
+
+            QUrl url("https://api.flickr.com/services/feeds/photos_public.gne?tags=nature,sky&tagmode=any&format=json&nojsoncallback=1");
+            QByteArray jsonResponseRaw = makeRequest(url);
+            QString imgUrl = QJsonDocument::fromJson(jsonResponseRaw).object()
+                    ["items"].toArray().last()
+                    ["media"].toObject()
+                    ["m"].toString();
+            imgUrl.replace("_m", "_b"); // m -> small image, b -> large image
+            imgSrc = makeRequest(imgUrl);
+        }
+
+        std::vector<QByteArray> imgParts;
         boardElements_.resize(dimension_ * dimension_);
 
+        {
+            QImage imgViewer;
+            imgViewer.loadFromData(imgSrc);
+            int w = imgViewer.width();
+            int h = imgViewer.height();
+            int partW = w / dimension_;
+            int partH = h / dimension_;
+
+            for (int yi = 0; yi < h-1; yi += partH) {
+                for (int xi = 0; xi < w-1; xi += partW) {
+                    QImage part(imgViewer.copy(xi, yi, partW, partH));
+                    QByteArray bArray;
+                    QBuffer buffer(&bArray);
+                    buffer.open(QIODevice::WriteOnly);
+                    part.save(&buffer, "JPEG");
+                    imgParts.emplace_back(bArray.toBase64());
+                }
+            }
+        }
+
         // fill with 1,2,3,4,5,...,0
-        std::iota(boardElements_.begin(), boardElements_.end() - 1, 1);
-        boardElements_.last() = hiddenValue();
+        for (int i = 0; i < boardElements_.size(); ++i) {
+            boardElements_[i].Value = i+1;
+            boardElements_[i].Image = "data:image/jpg;base64," + imgParts[i];
+        }
+        boardElements_.last().Value = hiddenValue();
 
         shaffleBoard();
     }
@@ -93,9 +172,8 @@ private:
 
     void shaffleBoard()
     {
-        using std::chrono::system_clock;
-        static auto seed = system_clock::now().time_since_epoch().count();
-        static std::mt19937 generator(seed);
+        static std::random_device rd;
+        static std::mt19937 generator(rd());
 
         do {
             std::shuffle(boardElements_.begin(), boardElements_.end(), generator);
@@ -188,7 +266,7 @@ private:
     }
 
 private:
-    static constexpr int defaultDimension_ = 2;
+    static constexpr int defaultDimension_ = 3;
 
     int dimension_;
     QVector<TileData> boardElements_;

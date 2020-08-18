@@ -1,8 +1,8 @@
 #ifndef GAMEBOARDMODEL_H
 #define GAMEBOARDMODEL_H
 
-#include "board.h"
 #include "main.h"
+#include "board.h"
 #include "tiledata.h"
 
 #include <QAbstractListModel>
@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <random>
 
-namespace DAL {
+namespace Dal {
 
 
 class GameBoardModel : public QAbstractListModel {
@@ -33,15 +33,13 @@ public:
 
     QVariant data(const QModelIndex &index, int role) const override
     {
-        QVariant value;
-
         if (index.isValid()) {
             if (role == Qt::DisplayRole) {
-              value = QVariant::fromValue((*board_)[index.row()]);
+                return QVariant::fromValue((*board_)[index.row()]);
             }
         }
 
-        return value;
+        return {};
     }
 
 public:

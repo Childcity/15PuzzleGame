@@ -22,13 +22,15 @@ HEADERS += \
 	src/main.h \
 	src/dal/gameboardmodel.h \
     src/dal/tiledata.h \
-    src/dal/board.h
+	src/dal/board.h \
+	#src/dal/image/downloader.h
 
 SOURCES += \
 	src/main.cpp \
 	src/dal/gameboardmodel.cpp \
     src/dal/tiledata.cpp \
-    src/dal/board.cpp
+	src/dal/board.cpp \
+	#src/dal/image/downloader.cpp
 
 Release:DESTDIR = release
 Release:OBJECTS_DIR = release/obj

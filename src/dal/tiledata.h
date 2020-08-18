@@ -3,24 +3,21 @@
 
 #include <memory>
 #include <QDebug>
-#include <QObject>
 
-namespace DAL {
+namespace Dal {
 
 
-struct TileData : public QObject {
-    Q_OBJECT
+struct TileData {
+private:
+    Q_GADGET
 
-    int m_value {};
-    Q_PROPERTY(int value MEMBER value NOTIFY valueChanged )
-
-signals:
-    void valueChanged(int value);
+    Q_PROPERTY(int Value MEMBER Value)
+    Q_PROPERTY(QString Image MEMBER Image)
 
 public:
     int Value {};
 
-    QByteArray Image {"qdwqd"};
+    QString Image {"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="};
 
     explicit TileData();
 
@@ -30,9 +27,7 @@ public:
 
     TileData(TileData &&other) noexcept;
 
-    TileData & operator=(const TileData &) = delete;
-
-    TileData & operator=(int val);
+    TileData & operator=(const TileData &) = default;
 
     bool operator==(const TileData &other) const;
 
@@ -52,7 +47,7 @@ public:
 
 }
 
-Q_DECLARE_METATYPE(DAL::TileData);
+Q_DECLARE_METATYPE(Dal::TileData);
 
 
 #endif // TILEDATA_H

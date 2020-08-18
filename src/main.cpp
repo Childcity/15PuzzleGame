@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     {
-        qmlRegisterType<DAL::GameBoardModel>("GameBoardModel", 1,0, "GameBoardModel");
+        qmlRegisterType<Dal::GameBoardModel>("GameBoardModel", 1,0, "GameBoardModel");
     }
 
     QQmlApplicationEngine engine;

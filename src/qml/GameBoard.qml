@@ -25,10 +25,8 @@ GridView {
         Tile {
             anchors.fill: backgroundDelegate
             anchors.margins: 5
-            tileText: {
-                console.log(typeof( model.display.Value),typeof( model.display))
-                model.display.Value
-            }
+            tileText: model.display.Value
+            tileImg: model.display.Image
 
             MouseArea {
                 anchors.fill: parent

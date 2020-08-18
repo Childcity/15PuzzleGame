@@ -3,7 +3,7 @@ import QtQuick.Window 2.11
 
 Window {
     id: root
-    title: qsTr("Hello World")
+    title: qsTr("15 Puzzle")
     visible: true
     width: 300
     height: 300
