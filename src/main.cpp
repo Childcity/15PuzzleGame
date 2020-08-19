@@ -1,4 +1,4 @@
-#include "dal/gameboardmodel.h"
+#include "Dal/gameboardmodel.h"
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>

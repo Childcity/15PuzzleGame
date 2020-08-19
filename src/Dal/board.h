@@ -44,25 +44,27 @@ public:
                 QObject::connect(&deadlineTimer, &QTimer::timeout, &looper, &QEventLoop::quit);
 
                 QNetworkRequest request(url);
+                request.setMaximumRedirectsAllowed(5);
+                request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
                 request.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) "
                                                                     "AppleWebKit/600.7.12 (KHTML, like Gecko) "
                                                                     "Version/8.0.7 Safari/600.7.12");
-                request.setMaximumRedirectsAllowed(10);
                 DEBUG("reaching url: " << url);
-                QNetworkReply *reply = networkManager.get(request);
+                qt_unique_ptr<QNetworkReply> reply;
+                reply.reset(networkManager.get(request));
 
                 deadlineTimer.start(3000);
                 looper.exec();
 
                 if (! deadlineTimer.isActive()){
-                    DEBUG("NetworkReply timed out!");
+                    //DEBUG("NetworkReply timed out!");
                     return QByteArray();
                 }
 
-                DEBUG("get -> " << url << ", size: " << reply->bytesAvailable()
-                      <<"status: " <<reply->error()
-                      <<"deadlineTimer: "<<deadlineTimer.interval()-deadlineTimer.remainingTime());
-                reply->deleteLater();
+                //DEBUG("get -> " << url << ", size: " << reply->bytesAvailable()
+                //      <<"status: " <<reply->error()
+                //      <<"deadlineTimer: "<<deadlineTimer.interval()-deadlineTimer.remainingTime());
+
                 return reply->readAll();
             };
 
@@ -88,8 +90,10 @@ public:
             int partW = w / dimension_;
             int partH = h / dimension_;
 
-            for (int yi = 0; yi < h-1; yi += partH) {
-                for (int xi = 0; xi < w-1; xi += partW) {
+            h -= partH/2;
+            w -= partW/2;
+            for (int yi = 0; yi < h; yi += partH) {
+                for (int xi = 0; xi < w; xi += partW) {
                     QImage part(imgViewer.copy(xi, yi, partW, partH));
                     QByteArray bArray;
                     QBuffer buffer(&bArray);
@@ -100,10 +104,12 @@ public:
             }
         }
 
+        assert(static_cast<int>(imgParts.size()) == boardElements_.size());
+
         // fill with 1,2,3,4,5,...,0
         for (int i = 0; i < boardElements_.size(); ++i) {
             boardElements_[i].Value = i+1;
-            boardElements_[i].Image = "data:image/jpg;base64," + imgParts[i];
+            boardElements_[i].Image = "data:image/jpg;base64," + imgParts[static_cast<size_t>(i)];
         }
         boardElements_.last().Value = hiddenValue();
 

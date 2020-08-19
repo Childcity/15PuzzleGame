@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QDateTime>
 
+#include <memory>
+
 struct DebugPrinter {
     const char *file;
     int line;
@@ -18,6 +20,20 @@ struct DebugPrinter {
         return stream;
     }
 };
+
+struct QObjectDeleteLater {
+    void operator()(QObject *o) {
+        o->deleteLater();
+    }
+};
+
+template<typename T>
+using qt_unique_ptr = std::unique_ptr<T, QObjectDeleteLater>;
+
+template<class T, class... _Types, std::enable_if_t<! std::is_array<T>::value, int> = 0>
+inline qt_unique_ptr<T> qt_make_unique(_Types&&... _Args){
+    return (qt_unique_ptr<T>(new T(std::forward<_Types>(_Args)...)));
+}
 
 #define DEBUG(msg_) qDebug() << DebugPrinter(__FILE__, __LINE__) << msg_ << "<";
 //#define DEBUGGAM(msg_) // Off debug

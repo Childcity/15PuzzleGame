@@ -28,7 +28,11 @@ bool TileData::operator<(const TileData &other) const { return Value < other.Val
 
 bool TileData::operator>(const TileData &other) const { return Value > other.Value; }
 
-void TileData::swap(TileData &other) noexcept { std::swap(Value, other.Value); }
+void TileData::swap(TileData &other) noexcept
+{
+    std::swap(Value, other.Value);
+    std::swap(Image, other.Image);
+}
 
 // Friend members
 

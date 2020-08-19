@@ -20,17 +20,17 @@ INCLUDEPATH += src/
 
 HEADERS += \
 	src/main.h \
-	src/dal/gameboardmodel.h \
-    src/dal/tiledata.h \
-	src/dal/board.h \
-	#src/dal/image/downloader.h
+	src/Dal/gameboardmodel.h \
+	src/Dal/tiledata.h \
+	src/Dal/board.h \
+	src/Dal/Image/downloader.h
 
 SOURCES += \
 	src/main.cpp \
-	src/dal/gameboardmodel.cpp \
-    src/dal/tiledata.cpp \
-	src/dal/board.cpp \
-	#src/dal/image/downloader.cpp
+	src/Dal/gameboardmodel.cpp \
+	src/Dal/tiledata.cpp \
+	src/Dal/board.cpp \
+	src/Dal/Image/downloader.cpp
 
 Release:DESTDIR = release
 Release:OBJECTS_DIR = release/obj
