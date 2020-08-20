@@ -16,6 +16,8 @@
 #include <QPixmap>
 #include <QBuffer>
 
+#include <Dal/Image/downloader.h>
+
 namespace Dal {
 
 
@@ -38,6 +40,8 @@ public:
                 QNetworkAccessManager networkManager;
                 QEventLoop looper;
                 QTimer deadlineTimer;
+
+                networkManager.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
                 deadlineTimer.setSingleShot(true);
 
                 QObject::connect(&networkManager, &QNetworkAccessManager::finished, &looper, &QEventLoop::quit );
@@ -45,7 +49,7 @@ public:
 
                 QNetworkRequest request(url);
                 request.setMaximumRedirectsAllowed(5);
-                request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+                request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
                 request.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) "
                                                                     "AppleWebKit/600.7.12 (KHTML, like Gecko) "
                                                                     "Version/8.0.7 Safari/600.7.12");
@@ -70,6 +74,10 @@ public:
 
 
             QUrl url("https://api.flickr.com/services/feeds/photos_public.gne?tags=nature,sky&tagmode=any&format=json&nojsoncallback=1");
+            Net::Downloader downloader;
+            auto future = downloader.get(url);
+            DEBUG(future.result().second);
+
             QByteArray jsonResponseRaw = makeRequest(url);
             QString imgUrl = QJsonDocument::fromJson(jsonResponseRaw).object()
                     ["items"].toArray().last()
