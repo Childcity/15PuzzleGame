@@ -16,7 +16,8 @@
 #include <QPixmap>
 #include <QBuffer>
 
-#include <Dal/Image/downloader.h>
+#include <Net/downloader.h>
+#include <Net/downloader.h>
 
 namespace Dal {
 
@@ -33,66 +34,66 @@ public:
     Board(int dimension = defaultDimension_)
         : dimension_(dimension)
     {
-        QByteArray imgSrc;
+//        QByteArray imgSrc;
 
-        {
-            auto makeRequest = [](QUrl url){
-                QNetworkAccessManager networkManager;
-                QEventLoop looper;
-                QTimer deadlineTimer;
+//        {
+//            auto makeRequest = [](QUrl url){
+//                QNetworkAccessManager networkManager;
+//                QEventLoop looper;
+//                QTimer deadlineTimer;
 
-                networkManager.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
-                deadlineTimer.setSingleShot(true);
+//                networkManager.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
+//                deadlineTimer.setSingleShot(true);
 
-                QObject::connect(&networkManager, &QNetworkAccessManager::finished, &looper, &QEventLoop::quit );
-                QObject::connect(&deadlineTimer, &QTimer::timeout, &looper, &QEventLoop::quit);
+//                QObject::connect(&networkManager, &QNetworkAccessManager::finished, &looper, &QEventLoop::quit );
+//                QObject::connect(&deadlineTimer, &QTimer::timeout, &looper, &QEventLoop::quit);
 
-                QNetworkRequest request(url);
-                request.setMaximumRedirectsAllowed(5);
-                request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
-                request.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) "
-                                                                    "AppleWebKit/600.7.12 (KHTML, like Gecko) "
-                                                                    "Version/8.0.7 Safari/600.7.12");
-                DEBUG("reaching url: " << url);
-                qt_unique_ptr<QNetworkReply> reply;
-                reply.reset(networkManager.get(request));
+//                QNetworkRequest request(url);
+//                request.setMaximumRedirectsAllowed(5);
+//                request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+//                request.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) "
+//                                                                    "AppleWebKit/600.7.12 (KHTML, like Gecko) "
+//                                                                    "Version/8.0.7 Safari/600.7.12");
+//                DEBUG("reaching url: " << url);
+//                qt_unique_ptr<QNetworkReply> reply;
+//                reply.reset(networkManager.get(request));
 
-                deadlineTimer.start(3000);
-                looper.exec();
+//                deadlineTimer.start(3000);
+//                looper.exec();
 
-                if (! deadlineTimer.isActive()){
-                    //DEBUG("NetworkReply timed out!");
-                    return QByteArray();
-                }
+//                if (! deadlineTimer.isActive()){
+//                    //DEBUG("NetworkReply timed out!");
+//                    return QByteArray();
+//                }
 
-                //DEBUG("get -> " << url << ", size: " << reply->bytesAvailable()
-                //      <<"status: " <<reply->error()
-                //      <<"deadlineTimer: "<<deadlineTimer.interval()-deadlineTimer.remainingTime());
+//                //DEBUG("get -> " << url << ", size: " << reply->bytesAvailable()
+//                //      <<"status: " <<reply->error()
+//                //      <<"deadlineTimer: "<<deadlineTimer.interval()-deadlineTimer.remainingTime());
 
-                return reply->readAll();
-            };
+//                return reply->readAll();
+//            };
 
 
-            QUrl url("https://api.flickr.com/services/feeds/photos_public.gne?tags=nature,sky&tagmode=any&format=json&nojsoncallback=1");
-            Net::Downloader downloader;
-            auto future = downloader.get(url);
-            DEBUG(future.result().second);
+//            QUrl url("https://api.flickr.com/services/feeds/photos_public.gne?tags=nature,sky&tagmode=any&format=json&nojsoncallback=1");
+//            Net::Downloader downloader;
+//            auto p = downloader.get(url);
+//            auto &&[jsonResponseRaw, error] = p;
 
-            QByteArray jsonResponseRaw = makeRequest(url);
-            QString imgUrl = QJsonDocument::fromJson(jsonResponseRaw).object()
-                    ["items"].toArray().last()
-                    ["media"].toObject()
-                    ["m"].toString();
-            imgUrl.replace("_m", "_b"); // m -> small image, b -> large image
-            imgSrc = makeRequest(imgUrl);
-        }
+//            QString imgUrl = QJsonDocument::fromJson(jsonResponseRaw).object()
+//                    ["items"].toArray().last()
+//                    ["media"].toObject()
+//                    ["m"].toString();
+//            imgUrl.replace("_m", "_b"); // m -> small image, b -> large image
+//            std::tie(imgSrc, error) = downloader.get(imgUrl);
+//        }
 
         std::vector<QByteArray> imgParts;
         boardElements_.resize(dimension_ * dimension_);
 
         {
-            QImage imgViewer;
-            imgViewer.loadFromData(imgSrc);
+            using namespace Net;
+            QImage imgViewer(FlickrImageProvider(std::make_shared<Downloader>()).getRundomImage());
+
             int w = imgViewer.width();
             int h = imgViewer.height();
             int partW = w / dimension_;
@@ -100,6 +101,7 @@ public:
 
             h -= partH/2;
             w -= partW/2;
+            DEBUG("valid:"<<!imgViewer.isNull()<<"w"<<w<<"h"<<h<<"partW"<<partW*dimension_<<"partH"<<partH*dimension_)
             for (int yi = 0; yi < h; yi += partH) {
                 for (int xi = 0; xi < w; xi += partW) {
                     QImage part(imgViewer.copy(xi, yi, partW, partH));

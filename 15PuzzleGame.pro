@@ -1,7 +1,7 @@
 VERSION = 1.1
 
 QT += quick concurrent
-CONFIG += c++17
+CONFIG += c++1z
 CONFIG += Release
 
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -23,14 +23,16 @@ HEADERS += \
 	src/Dal/gameboardmodel.h \
 	src/Dal/tiledata.h \
 	src/Dal/board.h \
-	src/Dal/Image/downloader.h
+	src/Net/downloader.h \
+    src/Net/idownloader.h
 
 SOURCES += \
 	src/main.cpp \
 	src/Dal/gameboardmodel.cpp \
 	src/Dal/tiledata.cpp \
 	src/Dal/board.cpp \
-	src/Dal/Image/downloader.cpp
+	src/Net/downloader.cpp \
+    src/Net/idownloader.cpp
 
 Release:DESTDIR = release
 Release:OBJECTS_DIR = release/obj
