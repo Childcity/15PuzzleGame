@@ -34,7 +34,7 @@ public:
 public:
     Result get(const QNetworkRequest &request) override;
 
-    Result get(const QUrl &url) override;
+    Result get(const QUrl &url, const QString &userAgent = QLatin1Literal("Mozilla/5.0")) override;
 
     std::chrono::milliseconds getTimeout() const override;
 

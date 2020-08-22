@@ -36,13 +36,12 @@ IDownloader::Result Downloader::get(const QNetworkRequest &request)
     return Result(reply->readAll(), reply->error());
 }
 
-IDownloader::Result Downloader::get(const QUrl &url)
+IDownloader::Result Downloader::get(const QUrl &url, const QString &userAgent)
 {
     QNetworkRequest request(url);
     request.setMaximumRedirectsAllowed(5);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
-    request.setHeader(QNetworkRequest::UserAgentHeader
-                      , "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0");
+    request.setHeader(QNetworkRequest::UserAgentHeader, userAgent);
     return get(request);
 }
 
