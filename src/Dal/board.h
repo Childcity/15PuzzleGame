@@ -19,6 +19,8 @@
 #include <Net/downloader.h>
 #include <Net/downloader.h>
 
+#include <Dal/image/flickrimageprovider.h>
+
 namespace Dal {
 
 
@@ -92,7 +94,11 @@ public:
 
         {
             using namespace Net;
-            QImage imgViewer(FlickrImageProvider(std::make_shared<Downloader>()).getRundomImage());
+            using namespace Image;
+            auto downloader = std::make_shared<Downloader>();
+            auto provider = FlickrImageProvider(downloader);
+
+            QImage imgViewer(provider.getRundomImage());
 
             int w = imgViewer.width();
             int h = imgViewer.height();

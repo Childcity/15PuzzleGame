@@ -19,6 +19,8 @@ RESOURCES += qml.qrc
 INCLUDEPATH += src/
 
 HEADERS += \
+	src/Dal/image/flickrimageprovider.h \
+	src/Dal/image/irundomimageprovider.h \
 	src/main.h \
 	src/Dal/gameboardmodel.h \
 	src/Dal/tiledata.h \
@@ -27,6 +29,8 @@ HEADERS += \
     src/Net/idownloader.h
 
 SOURCES += \
+	src/Dal/image/flickrimageprovider.cpp \
+	src/Dal/image/irundomimageprovider.cpp \
 	src/main.cpp \
 	src/Dal/gameboardmodel.cpp \
 	src/Dal/tiledata.cpp \
