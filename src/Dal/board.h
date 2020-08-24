@@ -27,7 +27,7 @@ public:
     {
         boardElements_.resize(dimension_ * dimension_);
 
-        auto imgParts = Image::BoardImageProcssor().getPartitions({dimension_, dimension_})
+        auto imgParts = Image::BoardImageProcessor().getPartitions({dimension_, dimension_})
             .result();
 
         assert(static_cast<int>(imgParts.size()) == boardElements_.size());
@@ -198,7 +198,7 @@ private:
     }
 
 private:
-    static constexpr int defaultDimension_ = 2;
+    static constexpr int defaultDimension_ = 4;
 
     int dimension_;
     QVector<TileData> boardElements_;

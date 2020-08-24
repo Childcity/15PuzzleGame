@@ -13,11 +13,11 @@ namespace Dal {
 namespace Image {
 
 
-class BoardImageProcssor {
+class BoardImageProcessor {
   using IImageProviderPtr = std::unique_ptr<IRundomImageProvider>;
 
 public:
-  BoardImageProcssor()
+  BoardImageProcessor()
   {
   }
 
@@ -28,29 +28,24 @@ public:
       IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
 
 
-      const QImage imgViewer(imgProvider_->getRundomImage());
+      const QImage fullImage(imgProvider_->getRundomImage());
 
-      int w = imgViewer.width();
-      int h = imgViewer.height();
+      int w = fullImage.width();
+      int h = fullImage.height();
       int partW = w / dimensions.x();
       int partH = h / dimensions.y();
 
-      int wBarier = w - partW/2;
-      int hBarier = h - partH/2;
+      int wEnd = w - partW/2;
+      int hEnd = h - partH/2;
 
       std::vector<QFuture<QByteArray>> partsFutures;
       partsFutures.reserve(dimensions.x() * dimensions.y());
 
-        for (int yi = 0; yi < hBarier; yi += partH) {
-          for (int xi = 0; xi < wBarier; xi += partW) {
-            partsFutures.emplace_back(QtConcurrent::run([&, xi, yi]{
-              QImage part(imgViewer.copy(xi, yi, partW, partH));
-              QBuffer buffer;
-              buffer.open(QIODevice::WriteOnly);
-              part.save(&buffer, "JPEG");
-              return buffer.data().toBase64();
-              //imgParts.emplace_back(bArray.toBase64());
-            }));
+        for (int yi = 0; yi < hEnd; yi += partH) {
+          for (int xi = 0; xi < wEnd; xi += partW) {
+            partsFutures.emplace_back(
+                PartitionImage(fullImage, QRect(xi, yi, partW, partH))
+            );
           }
         }
 
@@ -67,10 +62,19 @@ public:
   }
 
 private:
+  static QFuture<QByteArray> PartitionImage(const QImage &img, const QRect &rect)
+  {
+    return QtConcurrent::run([&]{
+              QBuffer buffer;
+              buffer.open(QIODevice::WriteOnly);
+              img.copy(rect).save(&buffer, "JPEG");
+              return buffer.data().toBase64();
+    });
+  }
+
 };
 
 
 }
 }
-
 #endif // BOARDIMAGEPROCSSOR_H
