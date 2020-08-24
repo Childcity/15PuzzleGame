@@ -19,6 +19,7 @@ RESOURCES += qml.qrc
 INCLUDEPATH += src/
 
 HEADERS += \
+	src/Dal/image/boardimageprocssor.h \
 	src/Dal/image/flickrimageprovider.h \
 	src/Dal/image/irundomimageprovider.h \
 	src/main.h \
@@ -29,6 +30,7 @@ HEADERS += \
     src/Net/idownloader.h
 
 SOURCES += \
+	src/Dal/image/boardimageprocssor.cpp \
 	src/Dal/image/flickrimageprovider.cpp \
 	src/Dal/image/irundomimageprovider.cpp \
 	src/main.cpp \

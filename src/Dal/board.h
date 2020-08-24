@@ -4,22 +4,11 @@
 #include "main.h"
 #include "tiledata.h"
 
-#include <QEventLoop>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QTimer>
 #include <QVector>
 #include <algorithm>
-#include <qnetworkreply.h>
 #include <random>
-#include <QPixmap>
-#include <QBuffer>
 
-#include <Net/downloader.h>
-#include <Net/downloader.h>
-
-#include <Dal/image/flickrimageprovider.h>
+#include <Dal/image/boardimageprocssor.h>
 
 namespace Dal {
 
@@ -36,89 +25,10 @@ public:
     Board(int dimension = defaultDimension_)
         : dimension_(dimension)
     {
-//        QByteArray imgSrc;
-
-//        {
-//            auto makeRequest = [](QUrl url){
-//                QNetworkAccessManager networkManager;
-//                QEventLoop looper;
-//                QTimer deadlineTimer;
-
-//                networkManager.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
-//                deadlineTimer.setSingleShot(true);
-
-//                QObject::connect(&networkManager, &QNetworkAccessManager::finished, &looper, &QEventLoop::quit );
-//                QObject::connect(&deadlineTimer, &QTimer::timeout, &looper, &QEventLoop::quit);
-
-//                QNetworkRequest request(url);
-//                request.setMaximumRedirectsAllowed(5);
-//                request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
-//                request.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) "
-//                                                                    "AppleWebKit/600.7.12 (KHTML, like Gecko) "
-//                                                                    "Version/8.0.7 Safari/600.7.12");
-//                DEBUG("reaching url: " << url);
-//                qt_unique_ptr<QNetworkReply> reply;
-//                reply.reset(networkManager.get(request));
-
-//                deadlineTimer.start(3000);
-//                looper.exec();
-
-//                if (! deadlineTimer.isActive()){
-//                    //DEBUG("NetworkReply timed out!");
-//                    return QByteArray();
-//                }
-
-//                //DEBUG("get -> " << url << ", size: " << reply->bytesAvailable()
-//                //      <<"status: " <<reply->error()
-//                //      <<"deadlineTimer: "<<deadlineTimer.interval()-deadlineTimer.remainingTime());
-
-//                return reply->readAll();
-//            };
-
-
-//            QUrl url("https://api.flickr.com/services/feeds/photos_public.gne?tags=nature,sky&tagmode=any&format=json&nojsoncallback=1");
-//            Net::Downloader downloader;
-//            auto p = downloader.get(url);
-//            auto &&[jsonResponseRaw, error] = p;
-
-//            QString imgUrl = QJsonDocument::fromJson(jsonResponseRaw).object()
-//                    ["items"].toArray().last()
-//                    ["media"].toObject()
-//                    ["m"].toString();
-//            imgUrl.replace("_m", "_b"); // m -> small image, b -> large image
-//            std::tie(imgSrc, error) = downloader.get(imgUrl);
-//        }
-
-        std::vector<QByteArray> imgParts;
         boardElements_.resize(dimension_ * dimension_);
 
-        {
-            using namespace Net;
-            using namespace Image;
-            auto downloader = std::make_shared<Downloader>();
-            auto provider = FlickrImageProvider(downloader);
-
-            QImage imgViewer(provider.getRundomImage());
-
-            int w = imgViewer.width();
-            int h = imgViewer.height();
-            int partW = w / dimension_;
-            int partH = h / dimension_;
-
-            h -= partH/2;
-            w -= partW/2;
-            DEBUG("valid:"<<!imgViewer.isNull()<<"w"<<w<<"h"<<h<<"partW"<<partW*dimension_<<"partH"<<partH*dimension_)
-            for (int yi = 0; yi < h; yi += partH) {
-                for (int xi = 0; xi < w; xi += partW) {
-                    QImage part(imgViewer.copy(xi, yi, partW, partH));
-                    QByteArray bArray;
-                    QBuffer buffer(&bArray);
-                    buffer.open(QIODevice::WriteOnly);
-                    part.save(&buffer, "JPEG");
-                    imgParts.emplace_back(bArray.toBase64());
-                }
-            }
-        }
+        auto imgParts = Image::BoardImageProcssor().getPartitions({dimension_, dimension_})
+            .result();
 
         assert(static_cast<int>(imgParts.size()) == boardElements_.size());
 
@@ -288,7 +198,7 @@ private:
     }
 
 private:
-    static constexpr int defaultDimension_ = 3;
+    static constexpr int defaultDimension_ = 2;
 
     int dimension_;
     QVector<TileData> boardElements_;

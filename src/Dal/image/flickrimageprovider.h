@@ -30,25 +30,33 @@ public:
     QUrl url("https://api.flickr.com/services/feeds/photos_public.gne"
              "?tags=nature,sky&tagmode=any&format=json&nojsoncallback=1");
 
-    QNetworkRequest request(url);
+    QNetworkRequest request;
     request.setMaximumRedirectsAllowed(5);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setHeader(QNetworkRequest::UserAgentHeader, userAgent);
-    DEBUG(userAgent)
 
-    auto &&[jsonResponseRaw, error1] = downloader_->get(request);
-    Q_UNUSED(error1) //TODO: check on error!
+    QByteArray imgSrc;
+    QNetworkReply::NetworkError err;
 
-    QString imgUrl = QJsonDocument::fromJson(jsonResponseRaw).object()
-                         ["items"].toArray().last()
-                         ["media"].toObject()
-                         ["m"].toString();
+    int maxTryis = 5;
+    do {
+      request.setUrl(url);
+      std::tie(imgSrc, err) = downloader_->get(request);
 
-    imgUrl.replace("_m", "_b"); // m -> small image, b -> large image
+      Q_UNUSED(err) //TODO: check on error!
 
-    request.setUrl(imgUrl);
-    auto &&[imgSrc, error2] = downloader_->get(request);
-    Q_UNUSED(error2)
+      QString imgUrl = QJsonDocument::fromJson(imgSrc).object()
+                           ["items"].toArray().last()
+                                   ["media"].toObject()
+                                   ["m"].toString();
+
+      imgUrl.replace("_m", "_b"); // m -> small image, b -> large image
+
+      request.setUrl(imgUrl);
+      std::tie(imgSrc, err) = downloader_->get(request);
+      Q_UNUSED(err)
+
+    } while (err != QNetworkReply::NoError && --maxTryis);
 
     return QImage::fromData(imgSrc);
   }
