@@ -37,9 +37,8 @@ public:
 
                 for (int i = 0; i < boardElements_.size(); ++i) {
                     imgs[static_cast<size_t>(i)].prepend("data:image/jpg;base64,");
-                    boardElements_[i].Image = imgs[static_cast<size_t>(i)];
-                    DEBUG("Image: " << boardElements_[i].Image.midRef(0, 40))
-                }
+		    boardElements_[i].Image = imgs[static_cast<size_t>(i)];
+		}
                 emit sigImagesCached();
             });
         }
