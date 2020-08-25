@@ -29,6 +29,8 @@ public:
 
     TileData & operator=(const TileData &) = default;
 
+    TileData & operator=(int val);
+
     bool operator==(const TileData &other) const;
 
     bool operator<(const TileData &other) const;

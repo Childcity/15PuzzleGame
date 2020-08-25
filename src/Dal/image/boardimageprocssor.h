@@ -13,65 +13,83 @@ namespace Dal {
 namespace Image {
 
 
-class BoardImageProcessor {
-  using IImageProviderPtr = std::unique_ptr<IRundomImageProvider>;
+class BoardImageController : public QObject {
+    Q_OBJECT
+
+    using IImageProviderPtr = std::unique_ptr<IRundomImageProvider>;
+
 
 public:
-  BoardImageProcessor()
-  {
-  }
+    BoardImageController(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+        connect(&imgWatcher_, &QFutureWatcher<std::vector<QByteArray>>::finished,
+                this, &BoardImageController::sigBoardImagesReady);
+    }
 
-  QFuture<std::vector<QByteArray>> getPartitions(const QPoint &dimensions)
-  {
-    return QtConcurrent::run([dimensions]{
-      auto downloader = std::make_shared<Net::Downloader>();
-      IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
+    ~BoardImageController() { DEBUG("~BoardImageController") }
 
+    QFuture<std::vector<QByteArray>> getBoardImagesAsync(const QPoint &dimensions)
+    {
+        imgFuture_ = QtConcurrent::run([dimensions]{
+            auto downloader = std::make_shared<Net::Downloader>();
+            IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
 
-      const QImage fullImage(imgProvider_->getRundomImage());
+            DEBUG("getBoardImagesAsync"<<QThread::currentThreadId());
 
-      int w = fullImage.width();
-      int h = fullImage.height();
-      int partW = w / dimensions.x();
-      int partH = h / dimensions.y();
+            const QImage fullImage(imgProvider_->getRundomImage());
 
-      int wEnd = w - partW/2;
-      int hEnd = h - partH/2;
+            int w = fullImage.width();
+            int h = fullImage.height();
+            int partW = w / dimensions.x();
+            int partH = h / dimensions.y();
 
-      std::vector<QFuture<QByteArray>> partsFutures;
-      partsFutures.reserve(dimensions.x() * dimensions.y());
+            int wEnd = w - partW/2;
+            int hEnd = h - partH/2;
 
-        for (int yi = 0; yi < hEnd; yi += partH) {
-          for (int xi = 0; xi < wEnd; xi += partW) {
-            partsFutures.emplace_back(
-                PartitionImage(fullImage, QRect(xi, yi, partW, partH))
-            );
-          }
-        }
+            size_t partsSize = static_cast<size_t>(dimensions.x() * dimensions.y());
+            std::vector<QFuture<QByteArray>> partsFutures;
+            partsFutures.reserve(partsSize);
 
-        std::vector<QByteArray> imgParts;
-        imgParts.reserve(partsFutures.size());
+              for (int yi = 0; yi < hEnd; yi += partH) {
+                  for (int xi = 0; xi < wEnd; xi += partW) {
+                      partsFutures.emplace_back(
+                          PartitionImage(fullImage, QRect(xi, yi, partW, partH))
+                      );
+                  }
+              }
 
-        for (auto && f: partsFutures) {
-          f.waitForFinished();
-          imgParts.emplace_back(std::move(f));
-        }
+              std::vector<QByteArray> imgParts;
+              imgParts.reserve(partsSize);
 
-      return imgParts;
-    });
-  }
+              for (auto && f: partsFutures) {
+                  imgParts.emplace_back(f.result());
+              }
+
+            return imgParts;
+        });
+
+        imgWatcher_.setFuture(imgFuture_);
+        return imgFuture_;
+    }
+
+signals:
+    void sigBoardImagesReady();
 
 private:
-  static QFuture<QByteArray> PartitionImage(const QImage &img, const QRect &rect)
-  {
-    return QtConcurrent::run([&]{
-              QBuffer buffer;
-              buffer.open(QIODevice::WriteOnly);
-              img.copy(rect).save(&buffer, "JPEG");
-              return buffer.data().toBase64();
-    });
-  }
+    static QFuture<QByteArray> PartitionImage(const QImage &img, const QRect rect)
+    {
+      return QtConcurrent::run([&img, rect]{
+                QBuffer buffer;
+                buffer.open(QIODevice::WriteOnly);
+                img.copy(rect).save(&buffer, "JPEG");
+                return buffer.data().toBase64();
+      });
+    }
 
+private:
+    QFutureWatcher<std::vector<QByteArray>> imgWatcher_;
+    QFuture<std::vector<QByteArray>> imgFuture_;
 };
 
 

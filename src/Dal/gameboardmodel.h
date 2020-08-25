@@ -24,7 +24,11 @@ public:
     GameBoardModel(QObject *parent = nullptr)
         : QAbstractListModel(parent)
     {
-        board_ = std::make_unique<Board>();
+        board_ = qt_make_unique<Board>(4, this);
+        connect(&*board_, &Board::sigImagesCached, this, [this]{
+            beginResetModel();
+            endResetModel();
+        });
     }
 
     // QAbstractItemModel interface
@@ -57,7 +61,7 @@ public slots:
 
         beginResetModel();
         {
-            board_ = std::make_unique<Board>(dimension);
+            board_ = qt_make_unique<Board>(dimension, this);
         }
         endResetModel();
 
@@ -89,9 +93,7 @@ signals:
     void sigGameWonChanged(bool isGameWon);
 
 private:
-
-private:
-    Board::Ptr board_;
+    qt_unique_ptr<Board> board_;
 };
 
 

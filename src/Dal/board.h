@@ -13,34 +13,47 @@
 namespace Dal {
 
 
-class Board {
+class Board : public QObject {
+    Q_OBJECT
+
     using Position = std::pair<int, int>;
 
     enum class ShiftDirection { Right, Left, Top, Bottom };
 
 public:
-    using Ptr = std::unique_ptr<Board>;
-
-public:
-    Board(int dimension = defaultDimension_)
-        : dimension_(dimension)
+    Board(int dimension, QObject *parent = nullptr)
+        : QObject(parent)
+        , dimension_(dimension)
     {
+        // get Async images for board
+        {
+            auto future = imgController_.getBoardImagesAsync({dimension_, dimension_});
+            connect(&imgController_, &Image::BoardImageController::sigBoardImagesReady,
+                    this, [this, imgsFuture = std::move(future)]{
+                DEBUG("on sigBoardImagesReady"<<QThread::currentThreadId());
+
+                auto &&imgs = imgsFuture.result();
+                assert(static_cast<int>(imgs.size()) == boardElements_.size());
+
+                for (int i = 0; i < boardElements_.size(); ++i) {
+                    imgs[static_cast<size_t>(i)].prepend("data:image/jpg;base64,");
+                    boardElements_[i].Image = imgs[static_cast<size_t>(i)];
+                    DEBUG("Image: " << boardElements_[i].Image.midRef(0, 40))
+                }
+                emit sigImagesCached();
+            });
+        }
+
         boardElements_.resize(dimension_ * dimension_);
 
-        auto imgParts = Image::BoardImageProcessor().getPartitions({dimension_, dimension_})
-            .result();
-
-        assert(static_cast<int>(imgParts.size()) == boardElements_.size());
-
         // fill with 1,2,3,4,5,...,0
-        for (int i = 0; i < boardElements_.size(); ++i) {
-            boardElements_[i].Value = i+1;
-            boardElements_[i].Image = "data:image/jpg;base64," + imgParts[static_cast<size_t>(i)];
-        }
+        std::iota(boardElements_.begin(), boardElements_.end(), 1);
         boardElements_.last().Value = hiddenValue();
 
         shaffleBoard();
     }
+
+    ~Board() { DEBUG("~Board") }
 
     void move(int index)
     {
@@ -95,7 +108,10 @@ public:
              && std::is_sorted(boardElements_.begin(), boardElements_.end() - 1);
     }
 
-    TileData operator[](int index) { return boardElements_.at(index); }
+    TileData operator[](int index) { return boardElements_[index]; }
+
+signals:
+    void sigImagesCached();
 
 private:
     Position getRowCol(int index) const { return {index / dimension_, index % dimension_}; }
@@ -198,10 +214,9 @@ private:
     }
 
 private:
-    static constexpr int defaultDimension_ = 4;
-
-    int dimension_;
+    Image::BoardImageController imgController_;
     QVector<TileData> boardElements_;
+    int dimension_;
 };
 
 

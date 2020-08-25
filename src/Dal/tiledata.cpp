@@ -17,10 +17,17 @@ TileData::TileData(int val)
 }
 
 TileData::TileData(TileData &&other) noexcept
-    : Value(std::move(other.Value))
+    : TileData()
 {
-    other.Value = 0;
+    swap(other);
 }
+
+TileData & TileData::operator=(int val)
+{
+    Value = val;
+    return *this;
+}
+
 
 bool TileData::operator==(const TileData &other) const { return Value == other.Value; }
 
@@ -31,7 +38,7 @@ bool TileData::operator>(const TileData &other) const { return Value > other.Val
 void TileData::swap(TileData &other) noexcept
 {
     std::swap(Value, other.Value);
-    std::swap(Image, other.Image);
+    Image.swap(other.Image);
 }
 
 // Friend members

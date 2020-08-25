@@ -23,7 +23,11 @@ struct DebugPrinter {
 
 struct QObjectDeleteLater {
     void operator()(QObject *o) {
-        o->deleteLater();
+        if (o->parent()){
+            o->deleteLater();
+        } else {
+            delete o;
+        }
     }
 };
 
