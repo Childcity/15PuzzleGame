@@ -30,15 +30,19 @@ public:
             auto future = imgController_.getBoardImagesAsync({dimension_, dimension_});
             connect(&imgController_, &Image::BoardImageController::sigBoardImagesReady,
                     this, [this, imgsFuture = std::move(future)]{
-                DEBUG("on sigBoardImagesReady"<<QThread::currentThreadId());
 
                 auto &&imgs = imgsFuture.result();
                 assert(static_cast<int>(imgs.size()) == boardElements_.size());
 
-                for (int i = 0; i < boardElements_.size(); ++i) {
-                    imgs[static_cast<size_t>(i)].prepend("data:image/jpg;base64,");
-		    boardElements_[i].Image = imgs[static_cast<size_t>(i)];
-		}
+                for (int i = 0; i < boardElements_.size() - 1; ++i) {
+                    auto tile = std::find_if(boardElements_.begin(), boardElements_.end(), [&](const TileData &el){
+                        return el.Value == i+1;
+                    });
+                    size_t isz = static_cast<size_t>(i);
+                    //imgs[isz].prepend("data:image/jpg;base64,");
+                    tile->Image = std::move(imgs[isz]);
+                }
+
                 emit sigImagesCached();
             });
         }

@@ -17,11 +17,37 @@ Rectangle {
 
     Image {
         id: img
-        source: tileImg
+        source: {
+            if (tileImg.length === 0) {
+                visible = false
+                loadingImg.visible = true
+            } else {
+                visible = true
+                loadingImg.visible = false
+            }
+            return tileImg
+        }
         anchors.fill: root
         anchors.margins: 2
         asynchronous: true
         clip: true
+    }
+
+    Text {
+        id: loadingImg
+        anchors.fill: root
+        anchors.margins: 2
+        clip: true
+        text: "Loading..."
+        font {
+            pointSize: {
+                var ps = Math.min(root.width, root.height) / 8
+                return ps > 1 ? ps : 1
+            }
+
+            family: "Ubuntu"
+            bold: true
+        }
     }
 
     Text {

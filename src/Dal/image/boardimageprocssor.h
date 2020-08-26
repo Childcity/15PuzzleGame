@@ -31,9 +31,9 @@ public:
 
     QFuture<std::vector<QByteArray>> getBoardImagesAsync(const QPoint &dimensions)
     {
-        imgFuture_ = QtConcurrent::run([dimensions]{
-            auto downloader = std::make_shared<Net::Downloader>();
-            IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
+        const auto imgFuture = QtConcurrent::run(&workerPool_, [this, dimensions]{
+            const auto downloader = std::make_shared<Net::Downloader>();
+            const IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
 
             DEBUG("getBoardImagesAsync"<<QThread::currentThreadId());
 
@@ -69,27 +69,27 @@ public:
             return imgParts;
         });
 
-        imgWatcher_.setFuture(imgFuture_);
-        return imgFuture_;
+        imgWatcher_.setFuture(imgFuture);
+        return imgFuture;
     }
 
 signals:
     void sigBoardImagesReady();
 
 private:
-    static QFuture<QByteArray> PartitionImage(const QImage &img, const QRect rect)
+    QFuture<QByteArray> PartitionImage(const QImage &img, const QRect rect)
     {
-      return QtConcurrent::run([&img, rect]{
+      return QtConcurrent::run(&workerPool_, [&img, rect]{
                 QBuffer buffer;
                 buffer.open(QIODevice::WriteOnly);
                 img.copy(rect).save(&buffer, "JPEG");
-                return buffer.data().toBase64();
+                return buffer.data().toBase64().prepend("data:image/jpg;base64,");
       });
     }
 
 private:
     QFutureWatcher<std::vector<QByteArray>> imgWatcher_;
-    QFuture<std::vector<QByteArray>> imgFuture_;
+    QThreadPool workerPool_;
 };
 
 

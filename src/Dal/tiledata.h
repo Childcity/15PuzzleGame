@@ -16,7 +16,7 @@ struct TileData {
 public:
     int Value {};
 
-    QString Image {"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOcMmVWIAAFmwIVQDwaugAAAABJRU5ErkJggg=="};
+    QString Image;
 
     explicit TileData();
 
