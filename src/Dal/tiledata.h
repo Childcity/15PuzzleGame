@@ -8,7 +8,6 @@ namespace Dal {
 
 
 struct TileData {
-private:
     Q_GADGET
 
     Q_PROPERTY(int Value MEMBER Value)
@@ -17,7 +16,7 @@ private:
 public:
     int Value {};
 
-    QString Image {"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="};
+    QString Image {"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOcMmVWIAAFmwIVQDwaugAAAABJRU5ErkJggg=="};
 
     explicit TileData();
 
