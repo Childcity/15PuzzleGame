@@ -27,21 +27,26 @@ public:
     {
         // get Async images for board
         {
+            // run acync task
             auto future = imgController_.getBoardImagesAsync({dimension_, dimension_});
+
+            // on acync task result
             connect(&imgController_, &Image::BoardImageController::sigBoardImagesReady,
                     this, [this, imgsFuture = std::move(future)]{
 
+                // move result from future
                 auto &&imgs = imgsFuture.result();
                 assert(static_cast<int>(imgs.size()) == boardElements_.size());
 
-                for (int i = 0; i < boardElements_.size() - 1; ++i) {
-                    auto tile = std::find_if(boardElements_.begin(), boardElements_.end(), [&](const TileData &el){
-                        return el.Value == i+1;
-                    });
-                    size_t isz = static_cast<size_t>(i);
-                    //imgs[isz].prepend("data:image/jpg;base64,");
-                    tile->Image = std::move(imgs[isz]);
-                }
+                std::transform(boardElements_.begin(), boardElements_.end(), boardElements_.begin()
+                               , [this, &imgs](TileData &tile) {
+                    if (tile.Value != hiddenValue()) {
+                        size_t isz = static_cast<size_t>(tile.Value - 1);
+                        tile.Image = std::move(imgs[isz]);
+                    }
+
+                    return std::move(tile);
+                });
 
                 emit sigImagesCached();
             });
@@ -55,8 +60,6 @@ public:
 
         shaffleBoard();
     }
-
-    ~Board() { DEBUG("~Board") }
 
     void move(int index)
     {
