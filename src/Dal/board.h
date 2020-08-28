@@ -126,11 +126,8 @@ private:
 
     void shaffleBoard()
     {
-        static std::random_device rd;
-        static std::mt19937 generator(rd());
-
         do {
-            std::shuffle(boardElements_.begin(), boardElements_.end(), generator);
+            std::random_shuffle(boardElements_.begin(), boardElements_.end());
             //DEBUG("isBoardSolvable" <<isBoardSolvable())
         } while ((! isBoardSolvable()) || isGameWon());
     }

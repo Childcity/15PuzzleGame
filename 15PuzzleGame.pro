@@ -1,7 +1,7 @@
 VERSION = 1.1
 
 QT += quick concurrent
-CONFIG += c++1z
+CONFIG += c++1z c++17
 CONFIG += release
 
 DEFINES += QT_DEPRECATED_WARNINGS

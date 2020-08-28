@@ -5,13 +5,10 @@
 #include "irundomimageprovider.h"
 #include "Net/idownloader.h"
 
-#include <QRegularExpression>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
 #include <QImage>
 #include <memory>
 #include <chrono>
+#include <regex>
 
 namespace Dal {
 namespace Image {
@@ -33,12 +30,14 @@ public:
 
         QNetworkRequest request;
         request.setMaximumRedirectsAllowed(5);
-        request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
-        request.setRawHeader(QByteArray::fromBase64("QXV0aG9yaXphdGlvbg=="), QByteArray::fromBase64("Q2xpZW50LUlEIDE3OWMzZmJiY2RjOGVjNQ=="));
+        request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                             QNetworkRequest::NoLessSafeRedirectPolicy);
+        request.setRawHeader(QByteArray::fromBase64("QXV0aG9yaXphdGlvbg=="),
+                             QByteArray::fromBase64("Q2xpZW50LUlEIDE3OWMzZmJiY2RjOGVjNQ=="));
 
         QByteArray imgSrc;
         QNetworkReply::NetworkError err;
-        std::list<QString> urls;
+        std::list<std::string> urls;
 
         int maxTryis = 5;
         do {
@@ -48,29 +47,31 @@ public:
                 std::tie(imgSrc, err) = downloader_->get(request);
             }
 
+
             Q_UNUSED(err) // TODO: check on error! create exceptions
-            if (err != QNetworkReply::NoError){
-                DEBUG("imgSrc" <<imgSrc <<err);
+            if (err != QNetworkReply::NoError) {
+                DEBUG("imgSrc" << imgSrc << err);
             }
 
             // parse response and fill urls list
             {
                 urls.clear();
-                auto matchIt = imgUrlTemplate.globalMatch(imgSrc);
-                while (matchIt.hasNext()) {
-                    const QString parsedUrl = std::move(matchIt.next().captured().replace('\\', ""));
-                    urls.emplace_back(std::move(parsedUrl));
-                }
+                auto matchesBegin = std::regex_token_iterator(imgSrc.cbegin(), imgSrc.cend(), imgUrlTemplate);
+                auto matchesEnd = std::regex_token_iterator<QByteArray::const_iterator>();
+                std::move(matchesBegin, matchesEnd, std::back_inserter(urls));
             }
 
             // get random image
             {
-                const QUrl randomUrl = getRandomElement(urls);
-                std::tie(imgSrc, err) = downloader_->get(QNetworkRequest(randomUrl));
+                std::tie(imgSrc, err) = downloader_->get(
+                    QNetworkRequest(
+                        QString::fromStdString(
+                            std::regex_replace(
+                                getRandomElement(urls), std::regex("\\\\"), ""))));
             }
 
             Q_UNUSED(err)
-            if (err != QNetworkReply::NoError){
+            if (err != QNetworkReply::NoError) {
                 DEBUG(err);
             }
 
@@ -81,7 +82,7 @@ public:
 
 private:
     template<class T>
-    const T & getRandomElement(const std::list<T> &urls) const
+    const T &getRandomElement(const std::list<T> &urls) const
     {
         size_t rndIndex = getFastNotSecureRandomNum(0, urls.size() - 1);
 
@@ -97,17 +98,17 @@ private:
         unsigned now = static_cast<unsigned>(system_clock::now().time_since_epoch().count());
         ::srand(now);
         size_t rnd = static_cast<size_t>(::rand());
-        return min + rnd % (max-min + 1);
+        return min + rnd % (max - min + 1);
     }
 
 private:
     const std::shared_ptr<Net::IDownloader> downloader_;
 
-    const QUrl getImgListUrl_ {"https://api.imgur.com/3/gallery/search/top/0/all/?q_all=nature,wallpaper&q_type=jpeg&q_type=png'"};
+    const QUrl getImgListUrl_{ "https://api.imgur.com/3/gallery/search/top/0/all/?q_all=nature,wallpaper&q_type=jpeg&q_type=png'" };
     const QString userAgent = QLatin1Literal("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) "
-                                            "Gecko/20100101 Firefox/15.0.1");
+                                             "Gecko/20100101 Firefox/15.0.1");
 
-    const QRegularExpression imgUrlTemplate {
+    const std::regex imgUrlTemplate{
         R"_(https*:\\\/\\\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\\\/\\\/=]*)(\.jpg|\.png))_"
     };
 };
