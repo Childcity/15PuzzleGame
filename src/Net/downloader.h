@@ -32,7 +32,7 @@ public:
     void setTimeout(const std::chrono::milliseconds timeout) override;
 
 private:
-    static constexpr int defaultTimeout = 3000;
+    static constexpr int defaultTimeout = 30000;
 
     QNetworkAccessManager networkManager_;
     QEventLoop looper_;
