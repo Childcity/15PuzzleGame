@@ -2,7 +2,7 @@
 #define DOWNLOADER_H
 
 #include "main.h"
-#include <Net/idownloader.h>
+#include "Net/idownloader.h"
 
 #include <QNetworkAccessManager>
 #include <QEventLoop>
@@ -25,7 +25,7 @@ public:
 
     // IDownloader interface
 public:
-    Result get(const QNetworkRequest &request) override;
+    QByteArray get(const QNetworkRequest &request) override;
 
     std::chrono::milliseconds getTimeout() const override;
 
@@ -40,7 +40,7 @@ private:
 };
 
 
-}
+} // namespace Net
 
 
 #endif // DOWNLOADER_H

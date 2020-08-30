@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "irundomimageprovider.h"
+#include "Net/networkerror.h"
 #include "Net/idownloader.h"
 
 #include <QImage>
@@ -10,8 +11,8 @@
 #include <chrono>
 #include <regex>
 
-namespace Dal {
-namespace Image {
+
+namespace Dal::Image {
 
 
 class FlickrImageProvider : public IRundomImageProvider {
@@ -26,58 +27,53 @@ public:
     {
         using namespace std::chrono_literals;
 
-        downloader_->setTimeout(5s);
+        downloader_->setTimeout(5ms);
 
-        QNetworkRequest request;
+        QNetworkRequest request(getImgListUrl_);
         request.setMaximumRedirectsAllowed(5);
         request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                              QNetworkRequest::NoLessSafeRedirectPolicy);
         request.setRawHeader(QByteArray::fromBase64("QXV0aG9yaXphdGlvbg=="),
                              QByteArray::fromBase64("Q2xpZW50LUlEIDE3OWMzZmJiY2RjOGVjNQ=="));
 
-        QByteArray imgSrc;
-        QNetworkReply::NetworkError err;
+        QByteArray tmpRes;
         std::list<std::string> urls;
 
-        int maxTryis = 5;
-        do {
-            // get json array with links to images
-            {
-                request.setUrl(getImgListUrl_);
-                std::tie(imgSrc, err) = downloader_->get(request);
+        int attempt = maxDownloadAttempts;
+        while (attempt--) {
+            try {
+                // get json array with links to images
+                {
+                    tmpRes = downloader_->get(request);
+                }
+
+                // parse response with links to different images and fill urls list
+                {
+                    urls.clear();
+                    auto matchesBegin = std::regex_token_iterator(tmpRes.cbegin(), tmpRes.cend(), imgUrlTemplate);
+                    auto matchesEnd = std::regex_token_iterator<QByteArray::const_iterator>();
+                    std::move(matchesBegin, matchesEnd, std::back_inserter(urls));
+                }
+
+                // get random image
+                {
+                    tmpRes = downloader_->get(
+                        QNetworkRequest(
+                            QString::fromStdString(
+                                std::regex_replace(
+                                    getRandomElement(urls), std::regex("\\\\"), ""))));
+                }
+
+                // if we here, we have gor image correctly
+                break;
+            } catch (const Net::NetworkError &ex) {
+                DEBUG("Download error:" << ex.what() << "Attempt:" << maxDownloadAttempts - attempt);
+                if (attempt < 1)
+                    throw;
             }
+        }
 
-
-            Q_UNUSED(err) // TODO: check on error! create exceptions
-            if (err != QNetworkReply::NoError) {
-                DEBUG("imgSrc" << imgSrc << err);
-            }
-
-            // parse response and fill urls list
-            {
-                urls.clear();
-                auto matchesBegin = std::regex_token_iterator(imgSrc.cbegin(), imgSrc.cend(), imgUrlTemplate);
-                auto matchesEnd = std::regex_token_iterator<QByteArray::const_iterator>();
-                std::move(matchesBegin, matchesEnd, std::back_inserter(urls));
-            }
-
-            // get random image
-            {
-                std::tie(imgSrc, err) = downloader_->get(
-                    QNetworkRequest(
-                        QString::fromStdString(
-                            std::regex_replace(
-                                getRandomElement(urls), std::regex("\\\\"), ""))));
-            }
-
-            Q_UNUSED(err)
-            if (err != QNetworkReply::NoError) {
-                DEBUG(err);
-            }
-
-        } while (err != QNetworkReply::NoError && --maxTryis);
-
-        return QImage::fromData(imgSrc);
+        return QImage::fromData(tmpRes);
     }
 
 private:
@@ -102,19 +98,20 @@ private:
     }
 
 private:
+    static constexpr int maxDownloadAttempts = 5;
+
     const std::shared_ptr<Net::IDownloader> downloader_;
 
-    const QUrl getImgListUrl_{ "https://api.imgur.com/3/gallery/search/top/0/all/?q_all=nature,wallpaper&q_type=jpeg&q_type=png'" };
+    const QUrl getImgListUrl_ { "https://api.imgur.com/3/gallery/search/top/0/all/?q_all=nature,wallpaper&q_type=jpeg&q_type=png'" };
     const QString userAgent = QLatin1Literal("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) "
                                              "Gecko/20100101 Firefox/15.0.1");
 
-    const std::regex imgUrlTemplate{
+    const std::regex imgUrlTemplate {
         R"_(https*:\\\/\\\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\\\/\\\/=]*)(\.jpg|\.png))_"
     };
 };
 
 
-} // namespace Image
-} // namespace Dal
+} // namespace Dal::Image
 
 #endif // FLICKRIMAGEPROVIDER_H

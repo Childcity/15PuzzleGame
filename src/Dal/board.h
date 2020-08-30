@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <random>
 
-#include <Dal/image/boardimageprocssor.h>
+#include <Dal/image/boardimagecontroller.h>
 
 namespace Dal {
 
@@ -18,7 +18,13 @@ class Board : public QObject {
 
     using Position = std::pair<int, int>;
 
-    enum class ShiftDirection { Right, Left, Top, Bottom };
+    enum class ShiftDirection
+    {
+        Right,
+        Left,
+        Top,
+        Bottom
+    };
 
 public:
     Board(int dimension, QObject *parent = nullptr)
@@ -28,28 +34,37 @@ public:
         // get Async images for board
         {
             // run acync task
-            auto future = imgController_.getBoardImagesAsync({dimension_, dimension_});
+            auto future = imgController_.getBoardImagesAsync({ dimension_, dimension_ });
+            auto future2 = imgController_.getImages({ dimension_, dimension_ });
+            try {
+                DEBUG("future2:" << future2.get().size());
+            } catch (std::runtime_error &ex) {
+                DEBUG(ex.what())
+            }
 
             // on acync task result
             connect(&imgController_, &Image::BoardImageController::sigBoardImagesReady,
-                    this, [this, imgsFuture = std::move(future)]{
+                    this, [this, imgsFuture = std::move(future)] {
+                        std::vector<QByteArray> imgs;
+                        try {
+                            // move result from future
+                            imgs = imgsFuture.result();
+                            assert(static_cast<int>(imgs.size()) == boardElements_.size());
+                        } catch (std::runtime_error &ex) {
+                            DEBUG(ex.what())
+                        }
 
-                // move result from future
-                auto &&imgs = imgsFuture.result();
-                assert(static_cast<int>(imgs.size()) == boardElements_.size());
+                        std::transform(boardElements_.begin(), boardElements_.end(), boardElements_.begin(), [this, &imgs](TileData &tile) {
+                            if (tile.Value != hiddenValue()) {
+                                size_t isz = static_cast<size_t>(tile.Value - 1);
+                                tile.Image = std::move(imgs[isz]);
+                            }
 
-                std::transform(boardElements_.begin(), boardElements_.end(), boardElements_.begin()
-                               , [this, &imgs](TileData &tile) {
-                    if (tile.Value != hiddenValue()) {
-                        size_t isz = static_cast<size_t>(tile.Value - 1);
-                        tile.Image = std::move(imgs[isz]);
-                    }
+                            return std::move(tile);
+                        });
 
-                    return std::move(tile);
-                });
-
-                emit sigImagesCached();
-            });
+                        emit sigImagesCached();
+                    });
         }
 
         boardElements_.resize(dimension_ * dimension_);
@@ -66,8 +81,8 @@ public:
         const Position posToMove = getRowCol(index);
         const Position hidPos = getRowCol(hiddenIndex());
 
-        ShiftDirection direction{};
-        int count{};
+        ShiftDirection direction {};
+        int count {};
 
         if (posToMove.first == hidPos.first) { // shift Left/Right
             count = posToMove.second - hidPos.second;
@@ -89,40 +104,59 @@ public:
         shift2D(boardElements_, hidPos, count, direction);
     }
 
-    int tilesNumber() const { return boardElements_.size(); }
+    int tilesNumber() const
+    {
+        return boardElements_.size();
+    }
 
-    int dimension() const { return dimension_; }
+    int dimension() const
+    {
+        return dimension_;
+    }
 
-    int hiddenValue() const { return 0; }
+    int hiddenValue() const
+    {
+        return 0;
+    }
 
-    int hiddenIndex() const { return findHiddenIndex(); }
+    int hiddenIndex() const
+    {
+        return findHiddenIndex();
+    }
 
     bool isMovable(Position pos, Position hidPos) const
     {
-        return  pos.second == hidPos.second || pos.first == hidPos.first;
+        return pos.second == hidPos.second || pos.first == hidPos.first;
     }
 
     bool isMovable(int index) const
     {
-        return index >= 0 && index < boardElements_.size()
-                && isMovable(getRowCol(index), getRowCol(hiddenIndex()));
+        return index >= 0 && index < boardElements_.size() && isMovable(getRowCol(index), getRowCol(hiddenIndex()));
     }
 
     bool isGameWon() const
     {
-      return boardElements_.first().Value != hiddenValue()
-             && std::is_sorted(boardElements_.begin(), boardElements_.end() - 1);
+        return boardElements_.first().Value != hiddenValue() && std::is_sorted(boardElements_.begin(), boardElements_.end() - 1);
     }
 
-    TileData operator[](int index) { return boardElements_[index]; }
+    TileData operator[](int index)
+    {
+        return boardElements_[index];
+    }
 
 signals:
     void sigImagesCached();
 
 private:
-    Position getRowCol(int index) const { return {index / dimension_, index % dimension_}; }
+    Position getRowCol(int index) const
+    {
+        return { index / dimension_, index % dimension_ };
+    }
 
-    int getIndex(Position pos) const { return pos.first * dimension_ + pos.second; }
+    int getIndex(Position pos) const
+    {
+        return pos.first * dimension_ + pos.second;
+    }
 
     void shaffleBoard()
     {
@@ -134,43 +168,42 @@ private:
 
     bool isBoardSolvable() const
     {
-      // Count inversions in given puzzle
-      int invCount = 0;
-      for (int i = 0; i < boardElements_.size() - 1; i++)
-      {
-          for (int j = i + 1; j < boardElements_.size(); j++)
-          {
-              // count pairs(i, j) such that i appears
-              // before j, but i > j.
-              if (boardElements_[j].Value && boardElements_[i].Value
-                  && boardElements_[i] > boardElements_[j])
-              {
-                  invCount++;
-              }
-          }
-      }
+        // Count inversions in given puzzle
+        int invCount = 0;
+        for (int i = 0; i < boardElements_.size() - 1; i++)
+        {
+            for (int j = i + 1; j < boardElements_.size(); j++)
+            {
+                // count pairs(i, j) such that i appears
+                // before j, but i > j.
+                if (boardElements_[j].Value && boardElements_[i].Value && boardElements_[i] > boardElements_[j])
+                {
+                    invCount++;
+                }
+            }
+        }
 
-      auto isOdd = [](int val){ return (val & 1); };
-      auto isEven = [&isOdd](int val){ return ! isOdd(val); };
+        auto isOdd = [](int val) { return (val & 1); };
+        auto isEven = [&isOdd](int val) { return ! isOdd(val); };
 
-      // If grid is odd, return true if inversion
-      // count is even.
-      if (isOdd(dimension_)) {
-          return isEven(invCount);
-      } else {
-          // grid is even
-          const int hiddenIndex = findHiddenIndex();
-          const int pos = getRowCol(hiddenIndex).first;
-          return isOdd(pos) ? isEven(invCount) : isOdd(invCount);
-      }
+        // If grid is odd, return true if inversion
+        // count is even.
+        if (isOdd(dimension_)) {
+            return isEven(invCount);
+        } else {
+            // grid is even
+            const int hiddenIndex = findHiddenIndex();
+            const int pos = getRowCol(hiddenIndex).first;
+            return isOdd(pos) ? isEven(invCount) : isOdd(invCount);
+        }
     }
 
     int findHiddenIndex() const
     {
-      // find and update hidden index
-      const auto it = std::find(boardElements_.begin(), boardElements_.end(), TileData(hiddenValue()));
-      assert(it != boardElements_.end());
-      return static_cast<int>(std::distance(boardElements_.begin(), it));
+        // find and update hidden index
+        const auto it = std::find(boardElements_.begin(), boardElements_.end(), TileData(hiddenValue()));
+        assert(it != boardElements_.end());
+        return static_cast<int>(std::distance(boardElements_.begin(), it));
     }
 
     void shift2D(QVector<TileData> &vec, Position strtPos, int count, ShiftDirection direction)
@@ -187,7 +220,7 @@ private:
             assert(endIndx < dimension_);
 
             for (int i = strtIndx; i <= endIndx; ++i) {
-                vec[getIndex({row, i - 1})].swap(vec[getIndex({row, i})]);
+                vec[getIndex({ row, i - 1 })].swap(vec[getIndex({ row, i })]);
             }
         } else if (direction == ShiftDirection::Left) {
             int strtIndx = col - 1;
@@ -195,7 +228,7 @@ private:
             assert(endIndx >= 0);
 
             for (int i = strtIndx; i >= endIndx; --i) {
-                vec[getIndex({row, i + 1})].swap(vec[getIndex({row, i})]);
+                vec[getIndex({ row, i + 1 })].swap(vec[getIndex({ row, i })]);
             }
         } else if (direction == ShiftDirection::Bottom) {
             int strtIndx = row + 1;
@@ -203,7 +236,7 @@ private:
             assert(endIndx < dimension_);
 
             for (int i = strtIndx; i <= endIndx; ++i) {
-                vec[getIndex({i - 1, col})].swap(vec[getIndex({i, col})]);
+                vec[getIndex({ i - 1, col })].swap(vec[getIndex({ i, col })]);
             }
         } else if (direction == ShiftDirection::Top) {
             int strtIndx = row - 1;
@@ -211,7 +244,7 @@ private:
             assert(endIndx >= 0);
 
             for (int i = strtIndx; i >= endIndx; --i) {
-                vec[getIndex({i + 1, col})].swap(vec[getIndex({i, col})]);
+                vec[getIndex({ i + 1, col })].swap(vec[getIndex({ i, col })]);
             }
         }
     }
@@ -223,6 +256,6 @@ private:
 };
 
 
-}
+} // namespace Dal
 
 #endif // BOARD_H

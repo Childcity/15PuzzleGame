@@ -26,9 +26,9 @@ public:
 
     TileData(TileData &&other) noexcept;
 
-    TileData & operator=(const TileData &) = default;
+    TileData &operator=(const TileData &) = default;
 
-    TileData & operator=(int val);
+    TileData &operator=(int val);
 
     bool operator==(const TileData &other) const;
 
@@ -42,11 +42,11 @@ public:
 
     friend void swap(TileData &l, TileData &r) noexcept;
 
-    friend QDebug & operator<<(QDebug &stream, const TileData &other);
+    friend QDebug &operator<<(QDebug &stream, const TileData &other);
 };
 
 
-}
+} // namespace Dal
 
 Q_DECLARE_METATYPE(Dal::TileData);
 
