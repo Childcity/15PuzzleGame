@@ -14,7 +14,7 @@ namespace Dal::Image {
 
 class FutureEvents {
 public:
-    virtual void finished() = 0;
+    virtual void sigFinished() = 0;
 };
 
 class FutureWatcherBase : public QObject, public FutureEvents {
@@ -27,30 +27,36 @@ public:
     {}
 
     template<class FResult>
-    void startWatching(const std::future<FResult> &futureToWait)
+    void startWatching(const std::future<FResult> *futureToWait)
     {
-        if(! futureToWait.valid()){
-            emit finished();
-            return;
-        }
-        waiterThread_ = QThread::create([&futureToWait] {
-            futureToWait.wait();
+        DEBUG("waiterThread_" << futureToWait)
+        // don't support invalid future
+        assert(futureToWait->valid());
+
+        DEBUG("waiterThread_" << futureToWait->valid())
+
+        waiterThread_ = QThread::create([futureToWait] {
+            futureToWait->wait();
         });
+
+        DEBUG("waiterThread_" << waiterThread_)
         assert(waiterThread_);
-        connect(waiterThread_, &QThread::finished, this, &FutureWatcherBase::finished, Qt::QueuedConnection);
+
+        connect(waiterThread_, &QThread::finished, this, &FutureWatcherBase::sigFinished, Qt::QueuedConnection);
+        connect(waiterThread_, &QThread::finished, waiterThread_, &QThread::deleteLater, Qt::QueuedConnection);
         waiterThread_->start();
     }
 
-    //virtual std::any future() const = 0;
-
-    ~FutureWatcherBase()
+    ~FutureWatcherBase() override
     {
-        if (waiterThread_)
-            waiterThread_->wait();
+        if (waiterThread_) {
+            if (waiterThread_->isRunning())
+                waiterThread_->wait();
+        }
     }
 
 signals:
-    void finished() override;
+    void sigFinished() override;
 
 private:
     QThread *waiterThread_;
@@ -63,21 +69,23 @@ public:
         : FutureWatcherBase(parent)
     {}
 
-    void setFuture(const std::future<FResult> &future)
+    void setFuture(const std::future<FResult> *future)
     {
         if (future_ == future)
             return;
-        startWatching(future_);
+
         future_ = future;
+
+        startWatching<FResult>(future_);
     }
 
-    std::future<FResult> future() const
+    std::future<FResult> *future() const
     {
         return future_;
     }
 
 private:
-    std::future<FResult> future_;
+    const std::future<FResult> *future_;
 };
 
 class BoardImageController : public QObject {
@@ -92,6 +100,9 @@ public:
     {
         connect(&imgWatcher_, &QFutureWatcher<std::vector<QByteArray>>::finished,
                 this, &BoardImageController::sigBoardImagesReady);
+
+        connect(&watcher_, &FutureWatcher<std::vector<QByteArray>>::sigFinished,
+                this, &BoardImageController::sigBoardImagesReady, Qt::QueuedConnection);
     }
 
     ~BoardImageController() { DEBUG("~BoardImageController") }
@@ -145,14 +156,13 @@ public:
         return imgFuture;
     }
 
-    std::future<std::vector<QByteArray>> getImages(const QPoint &dimensions)
+    std::future<std::vector<QByteArray>> *getImages(const QPoint &dimensions)
     {
-
-        watcher_.setFuture( std::async(std::launch::async, [this, dimensions] {
+        future_ = std::async(std::launch::async, [this, dimensions] {
             const auto downloader = std::make_shared<Net::Downloader>();
             const IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
 
-            DEBUG("getBoardImagesAsync" << QThread::currentThreadId());
+            DEBUG("getImages" << QThread::currentThreadId());
 
             QImage fullImage;
 
@@ -185,8 +195,10 @@ public:
             }
 
             return imgParts;
-        }));
-        return watcher_.future();
+        });
+
+        watcher_.setFuture(&future_);
+        return &future_;
     }
 
 signals:
@@ -204,6 +216,7 @@ private:
     }
 
 private:
+    std::future<std::vector<QByteArray>> future_;
     FutureWatcher<std::vector<QByteArray>> watcher_;
     QFutureWatcher<std::vector<QByteArray>> imgWatcher_;
     QThreadPool workerPool_;

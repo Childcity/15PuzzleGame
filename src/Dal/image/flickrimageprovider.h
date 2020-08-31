@@ -27,7 +27,7 @@ public:
     {
         using namespace std::chrono_literals;
 
-        downloader_->setTimeout(5ms);
+        downloader_->setTimeout(5s);
 
         QNetworkRequest request(getImgListUrl_);
         request.setMaximumRedirectsAllowed(5);
