@@ -14,7 +14,7 @@ namespace Dal::Image {
 
 class FutureEvents {
 public:
-    virtual void sigFinished() = 0;
+    virtual void sigResultReady() = 0;
 };
 
 class FutureWatcherBase : public QObject, public FutureEvents {
@@ -33,33 +33,44 @@ public:
         // don't support invalid future
         assert(futureToWait->valid());
 
-        DEBUG("waiterThread_" << futureToWait->valid())
-
         waiterThread_ = QThread::create([futureToWait] {
             futureToWait->wait();
         });
 
-        DEBUG("waiterThread_" << waiterThread_)
         assert(waiterThread_);
 
-        connect(waiterThread_, &QThread::finished, this, &FutureWatcherBase::sigFinished, Qt::QueuedConnection);
-        connect(waiterThread_, &QThread::finished, waiterThread_, &QThread::deleteLater, Qt::QueuedConnection);
+        connect(waiterThread_, &QThread::finished, this, &FutureWatcherBase::sigResultReady, Qt::DirectConnection);
+        connect(
+            waiterThread_, &QThread::finished, waiterThread_, [this] {
+                if (waiterThread_) {
+                    waiterThread_->deleteLater();
+                    waiterThread_ = nullptr;
+                }
+            },
+            Qt::DirectConnection);
+
         waiterThread_->start();
     }
 
     ~FutureWatcherBase() override
     {
+        DEBUG("~FutureWatcherBase ->")
         if (waiterThread_) {
-            if (waiterThread_->isRunning())
-                waiterThread_->wait();
+            if (waiterThread_->isRunning()) {
+                waiterThread_->terminate();
+                //waiterThread_->wait();
+                waiterThread_->deleteLater();
+                waiterThread_ = nullptr;
+            }
         }
+        DEBUG("~FutureWatcherBase <-")
     }
 
 signals:
-    void sigFinished() override;
+    void sigResultReady() override;
 
 private:
-    QThread *waiterThread_;
+    QPointer<QThread> waiterThread_;
 };
 
 template<class FResult>
@@ -68,6 +79,11 @@ public:
     explicit FutureWatcher(QObject *parent = nullptr)
         : FutureWatcherBase(parent)
     {}
+
+    ~FutureWatcher()
+    {
+        DEBUG("~FutureWatcher")
+    }
 
     void setFuture(const std::future<FResult> *future)
     {
@@ -93,7 +109,6 @@ class BoardImageController : public QObject {
 
     using IImageProviderPtr = std::unique_ptr<IRundomImageProvider>;
 
-
 public:
     BoardImageController(QObject *parent = nullptr)
         : QObject(parent)
@@ -101,11 +116,11 @@ public:
         connect(&imgWatcher_, &QFutureWatcher<std::vector<QByteArray>>::finished,
                 this, &BoardImageController::sigBoardImagesReady);
 
-        connect(&watcher_, &FutureWatcher<std::vector<QByteArray>>::sigFinished,
+        connect(&watcher_, &FutureWatcher<std::vector<QByteArray>>::sigResultReady,
                 this, &BoardImageController::sigBoardImagesReady, Qt::QueuedConnection);
     }
 
-    ~BoardImageController() { DEBUG("~BoardImageController") }
+    ~BoardImageController() { DEBUG("~BoardImageController"); }
 
     QFuture<std::vector<QByteArray>> getBoardImagesAsync(const QPoint &dimensions)
     {

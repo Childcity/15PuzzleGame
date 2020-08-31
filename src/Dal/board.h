@@ -36,34 +36,32 @@ public:
             // run acync task
             //auto future = imgController_.getBoardImagesAsync({ dimension_, dimension_ });
             auto future2 = imgController_.getImages({ dimension_, dimension_ });
-            try {
-                //DEBUG("future2:" << future2->get().size());
-            } catch (std::runtime_error &ex) {
-                DEBUG(ex.what())
-            }
-            connect(&imgController_, &Image::BoardImageController::sigBoardImagesReady,
-                    this, [this, imgsFuture = future2] {
-                        std::vector<QByteArray> imgs;
-                        try {
-                            // move result from future
-                            imgs = imgsFuture->get();
-                            DEBUG("future2:" << imgs.size());
-                            assert(static_cast<int>(imgs.size()) == boardElements_.size());
-                        } catch (std::runtime_error &ex) {
-                            DEBUG(ex.what())
+
+            connect(
+                &imgController_, &Image::BoardImageController::sigBoardImagesReady,
+                this, [this, imgsFuture = future2] {
+                    std::vector<QByteArray> imgs;
+                    try {
+                        // move result from future
+                        imgs = imgsFuture->get();
+                        DEBUG("imgs.size:" << imgs.size());
+                        assert(static_cast<int>(imgs.size()) == boardElements_.size());
+                    } catch (std::runtime_error &ex) {
+                        DEBUG(ex.what())
+                    }
+
+                    std::transform(boardElements_.begin(), boardElements_.end(), boardElements_.begin(), [this, &imgs](TileData &tile) {
+                        if (tile.Value != hiddenValue()) {
+                            size_t isz = static_cast<size_t>(tile.Value - 1);
+                            tile.Image = std::move(imgs[isz]);
                         }
 
-                        std::transform(boardElements_.begin(), boardElements_.end(), boardElements_.begin(), [this, &imgs](TileData &tile) {
-                            if (tile.Value != hiddenValue()) {
-                                size_t isz = static_cast<size_t>(tile.Value - 1);
-                                tile.Image = std::move(imgs[isz]);
-                            }
+                        return std::move(tile);
+                    });
 
-                            return std::move(tile);
-                        });
-
-                        emit sigImagesCached();
-            }, Qt::QueuedConnection);
+                    emit sigImagesCached();
+                },
+                Qt::QueuedConnection);
             // on acync task result
             //connect(&imgController_, &Image::BoardImageController::sigBoardImagesReady,
             //        this, [this, imgsFuture = std::move(future)] {
