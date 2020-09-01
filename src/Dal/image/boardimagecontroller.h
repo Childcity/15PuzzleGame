@@ -12,12 +12,12 @@
 
 namespace Dal::Image {
 
-class FutureEvents {
+class IFutureEvents {
 public:
     virtual void sigResultReady() = 0;
 };
 
-class FutureWatcherBase : public QObject, public FutureEvents {
+class FutureWatcherBase : public QObject, public IFutureEvents {
     Q_OBJECT
 
 public:
@@ -29,8 +29,7 @@ public:
     template<class FResult>
     void startWatching(const std::future<FResult> *futureToWait)
     {
-        DEBUG("waiterThread_" << futureToWait)
-        // don't support invalid future
+        // don't support invalid future here
         assert(futureToWait->valid());
 
         waiterThread_ = QThread::create([futureToWait] {
@@ -57,9 +56,9 @@ public:
         DEBUG("~FutureWatcherBase ->")
         if (waiterThread_) {
             if (waiterThread_->isRunning()) {
-                waiterThread_->terminate();
+                waiterThread_->disconnect(waiterThread_, &QThread::finished, nullptr, nullptr);
                 //waiterThread_->wait();
-                waiterThread_->deleteLater();
+                //waiterThread_->deleteLater();
                 waiterThread_ = nullptr;
             }
         }
@@ -80,149 +79,115 @@ public:
         : FutureWatcherBase(parent)
     {}
 
-    ~FutureWatcher()
+    ~FutureWatcher() override
     {
-        DEBUG("~FutureWatcher")
+        DEBUG("~FutureWatcher");
     }
 
-    void setFuture(const std::future<FResult> *future)
+    void setFuture(std::future<FResult> future)
     {
-        if (future_ == future)
-            return;
+        // future_ must be invalid. If future_ is valid, then this future has set before
+        // FutureWatcher is watching only for one future
+        assert(! future_.valid());
 
-        future_ = future;
+        future_ = std::move(future);
 
-        startWatching<FResult>(future_);
+        startWatching<FResult>(&future_);
     }
 
-    std::future<FResult> *future() const
+    FResult getResult()
     {
-        return future_;
+        DEBUG("getResult")
+        return future_.get();
+    }
+
+    std::future<FResult> const *future() const
+    {
+        return &future_;
     }
 
 private:
-    const std::future<FResult> *future_;
+    std::future<FResult> future_;
 };
 
 class BoardImageController : public QObject {
     Q_OBJECT
 
     using IImageProviderPtr = std::unique_ptr<IRundomImageProvider>;
+    using BoardImages = std::vector<QByteArray>;
 
 public:
     BoardImageController(QObject *parent = nullptr)
         : QObject(parent)
+        , watcher_(new FutureWatcher<BoardImages>(this))
     {
-        connect(&imgWatcher_, &QFutureWatcher<std::vector<QByteArray>>::finished,
-                this, &BoardImageController::sigBoardImagesReady);
-
-        connect(&watcher_, &FutureWatcher<std::vector<QByteArray>>::sigResultReady,
+        connect(watcher_, &FutureWatcher<BoardImages>::sigResultReady,
                 this, &BoardImageController::sigBoardImagesReady, Qt::QueuedConnection);
     }
 
-    ~BoardImageController() { DEBUG("~BoardImageController"); }
-
-    QFuture<std::vector<QByteArray>> getBoardImagesAsync(const QPoint &dimensions)
+    ~BoardImageController()
     {
-        const auto imgFuture = QtConcurrent::run(&workerPool_, [this, dimensions] {
-            const auto downloader = std::make_shared<Net::Downloader>();
-            const IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
-
-            DEBUG("getBoardImagesAsync" << QThread::currentThreadId());
-
-            QImage fullImage;
-
-
-            try {
-                fullImage = imgProvider_->getRundomImage();
-            } catch (Net::NetworkError &ex) {
-            }
-
-            int w = fullImage.width();
-            int h = fullImage.height();
-            int partW = w / dimensions.x();
-            int partH = h / dimensions.y();
-
-            int wEnd = w - partW / 2;
-            int hEnd = h - partH / 2;
-
-            size_t partsSize = static_cast<size_t>(dimensions.x() * dimensions.y());
-            std::vector<QFuture<QByteArray>> partsFutures;
-            partsFutures.reserve(partsSize);
-
-            for (int yi = 0; yi < hEnd; yi += partH) {
-                for (int xi = 0; xi < wEnd; xi += partW) {
-                    partsFutures.emplace_back(
-                        partitionImage(fullImage, QRect(xi, yi, partW, partH)));
-                }
-            }
-
-            std::vector<QByteArray> imgParts;
-            imgParts.reserve(partsSize);
-
-            for (auto &&f : partsFutures) {
-                imgParts.emplace_back(f.result());
-            }
-
-            return imgParts;
-        });
-
-        imgWatcher_.setFuture(imgFuture);
-        return imgFuture;
+        DEBUG("~BoardImageController");
     }
 
-    std::future<std::vector<QByteArray>> *getImages(const QPoint &dimensions)
+    void getBoardImagesAsync(const QPoint &dimensions)
     {
-        future_ = std::async(std::launch::async, [this, dimensions] {
-            const auto downloader = std::make_shared<Net::Downloader>();
-            const IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
+        auto future = std::async(
+            std::launch::async, [dimensions]() -> BoardImages {
+                const auto downloader = std::make_shared<Net::Downloader>();
+                const IImageProviderPtr imgProvider_ = std::make_unique<FlickrImageProvider>(downloader);
 
-            DEBUG("getImages" << QThread::currentThreadId());
+                DEBUG("getBoardImagesAsync" << QThread::currentThreadId());
 
-            QImage fullImage;
+                const QImage fullImage(imgProvider_->getRundomImage());
 
-            fullImage = imgProvider_->getRundomImage();
+                const int w = fullImage.width();
+                const int h = fullImage.height();
+                const int partW = w / dimensions.x();
+                const int partH = h / dimensions.y();
 
-            int w = fullImage.width();
-            int h = fullImage.height();
-            int partW = w / dimensions.x();
-            int partH = h / dimensions.y();
+                const int wEnd = w - partW / 2;
+                const int hEnd = h - partH / 2;
 
-            int wEnd = w - partW / 2;
-            int hEnd = h - partH / 2;
+                const size_t partsSize = static_cast<size_t>(dimensions.x() * dimensions.y());
+                DEBUG("partsSize"<<partsSize);
 
-            size_t partsSize = static_cast<size_t>(dimensions.x() * dimensions.y());
-            std::vector<QFuture<QByteArray>> partsFutures;
-            partsFutures.reserve(partsSize);
+                std::vector<std::future<QByteArray>> partsFutures;
+                BoardImages imgParts;
+                partsFutures.reserve(partsSize);
+                imgParts.reserve(partsSize);
 
-            for (int yi = 0; yi < hEnd; yi += partH) {
-                for (int xi = 0; xi < wEnd; xi += partW) {
-                    partsFutures.emplace_back(
-                        partitionImage(fullImage, QRect(xi, yi, partW, partH)));
+                for (int yi = 0; yi < hEnd; yi += partH) {
+                    for (int xi = 0; xi < wEnd; xi += partW) {
+                        partsFutures.emplace_back(
+                            partitionImages(fullImage, QRect(xi, yi, partW, partH)));
+                    }
                 }
-            }
 
-            std::vector<QByteArray> imgParts;
-            imgParts.reserve(partsSize);
+                for (auto &&f : partsFutures) {
+                    imgParts.emplace_back(f.get());
+                }
 
-            for (auto &&f : partsFutures) {
-                imgParts.emplace_back(f.result());
-            }
+                DEBUG("imgParts.size"<<imgParts.size());
 
-            return imgParts;
-        });
+                return imgParts;
+            });
 
-        watcher_.setFuture(&future_);
-        return &future_;
+        watcher_->setFuture(std::move(future));
+    }
+
+    BoardImages getBoardImagesAcyncResult()
+    {
+        return watcher_->getResult();
     }
 
 signals:
     void sigBoardImagesReady();
 
 private:
-    QFuture<QByteArray> partitionImage(const QImage &img, const QRect rect)
+    static std::future<QByteArray> partitionImages(const QImage &img, const QRect rect)
     {
-        return QtConcurrent::run(&workerPool_, [&img, rect] {
+        return std::async([&img, rect] {
             QBuffer buffer;
             buffer.open(QIODevice::WriteOnly);
             img.copy(rect).save(&buffer, "JPEG");
@@ -231,12 +196,8 @@ private:
     }
 
 private:
-    std::future<std::vector<QByteArray>> future_;
-    FutureWatcher<std::vector<QByteArray>> watcher_;
-    QFutureWatcher<std::vector<QByteArray>> imgWatcher_;
-    QThreadPool workerPool_;
+    FutureWatcher<BoardImages> *watcher_;
 };
-
 
 } // namespace Dal::Image
 #endif // BOARDIMAGEPROCSSOR_H

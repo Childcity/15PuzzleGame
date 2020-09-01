@@ -34,57 +34,34 @@ public:
         // get Async images for board
         {
             // run acync task
-            //auto future = imgController_.getBoardImagesAsync({ dimension_, dimension_ });
-            auto future2 = imgController_.getImages({ dimension_, dimension_ });
+            imgController_.getBoardImagesAsync({ dimension_, dimension_ });
 
             connect(
-                &imgController_, &Image::BoardImageController::sigBoardImagesReady,
-                this, [this, imgsFuture = future2] {
+                &imgController_, &Image::BoardImageController::sigBoardImagesReady, this, [this] {
                     std::vector<QByteArray> imgs;
+
+                    // move result from async task to vector
                     try {
-                        // move result from future
-                        imgs = imgsFuture->get();
-                        DEBUG("imgs.size:" << imgs.size());
-                        assert(static_cast<int>(imgs.size()) == boardElements_.size());
+                        imgs = imgController_.getBoardImagesAcyncResult();
                     } catch (std::runtime_error &ex) {
                         DEBUG(ex.what())
                     }
 
-                    std::transform(boardElements_.begin(), boardElements_.end(), boardElements_.begin(), [this, &imgs](TileData &tile) {
-                        if (tile.Value != hiddenValue()) {
-                            size_t isz = static_cast<size_t>(tile.Value - 1);
-                            tile.Image = std::move(imgs[isz]);
-                        }
+                    DEBUG("imgs.size:" << imgs.size());
+                    assert(static_cast<int>(imgs.size()) == boardElements_.size());
 
-                        return std::move(tile);
-                    });
+                    // update boardElements_ with new images
+                    for (auto &tile : boardElements_) {
+                        if (tile.Value == hiddenValue())
+                            continue;
+
+                        size_t isz = static_cast<size_t>(tile.Value - 1);
+                        tile.Image = std::move(imgs[isz]);
+                    }
 
                     emit sigImagesCached();
                 },
                 Qt::QueuedConnection);
-            // on acync task result
-            //connect(&imgController_, &Image::BoardImageController::sigBoardImagesReady,
-            //        this, [this, imgsFuture = std::move(future)] {
-            //            std::vector<QByteArray> imgs;
-            //            try {
-            //                // move result from future
-            //                imgs = imgsFuture.result();
-            //                assert(static_cast<int>(imgs.size()) == boardElements_.size());
-            //            } catch (std::runtime_error &ex) {
-            //                DEBUG(ex.what())
-            //            }
-            //
-            //            std::transform(boardElements_.begin(), boardElements_.end(), boardElements_.begin(), [this, &imgs](TileData &tile) {
-            //                if (tile.Value != hiddenValue()) {
-            //                    size_t isz = static_cast<size_t>(tile.Value - 1);
-            //                    tile.Image = std::move(imgs[isz]);
-            //                }
-            //
-            //                return std::move(tile);
-            //            });
-            //
-            //            emit sigImagesCached();
-            //        });
         }
 
         boardElements_.resize(dimension_ * dimension_);
@@ -94,6 +71,11 @@ public:
         boardElements_.last().Value = hiddenValue();
 
         shaffleBoard();
+    }
+
+    ~Board() override
+    {
+        DEBUG("~Board");
     }
 
     void move(int index)
