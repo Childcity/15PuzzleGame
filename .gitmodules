@@ -1,0 +1,3 @@
+[submodule "src/Utils/StdFutureWatcher"]
+	path = src/Utils/StdFutureWatcher
+	url = https://github.com/Childcity/StdFutureWatcher.git
