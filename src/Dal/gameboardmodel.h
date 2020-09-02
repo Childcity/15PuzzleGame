@@ -50,11 +50,13 @@ public:
     bool isGameWon() const { return board_->isGameWon(); }
 
 public slots:
+    void resetBoard()
+    {
+        setDimension(dimension());
+    }
+
     void setDimension(int dimension)
     {
-        //if (dimension == board_->dimension())
-        //    return;
-
         beginResetModel();
         {
             createBoard(dimension);
@@ -88,10 +90,11 @@ signals:
 
     void sigGameWonChanged(bool isGameWon);
 
+    void sigGameBoardError(QString errorString);
+
 private:
     void createBoard(int dimension = 2)
     {
-        board_ = qt_make_unique<Board>(dimension, this);
         board_ = qt_make_unique<Board>(dimension, this);
         connect(&*board_, &Board::sigImagesCached, this, [this]{
             beginResetModel();

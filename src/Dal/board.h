@@ -2,13 +2,13 @@
 #define BOARD_H
 
 #include "main.h"
+#include "Dal/Image/boardimagecontroller.h"
+#include "Net/networkerror.h"
 #include "tiledata.h"
 
 #include <QVector>
 #include <algorithm>
-#include <random>
 
-#include <Dal/image/boardimagecontroller.h>
 
 namespace Dal {
 
@@ -30,21 +30,21 @@ public:
     Board(int dimension, QObject *parent = nullptr)
         : QObject(parent)
         , dimension_(dimension)
+        , boardElements_(dimension * dimension)
     {
         // get Async images for board
         {
-            // run acync task
-            imgController_.getBoardImagesAsync({ dimension_, dimension_ });
-
             connect(
-                &imgController_, &Image::BoardImageController::sigBoardImagesReady, this, [this] {
+                &imgController_, &Image::BoardImageController::sigBoardImagesReady,
+                this, [this] {
                     std::vector<QByteArray> imgs;
 
-                    // move result from async task to vector
                     try {
+                        // move result from async task to vector
                         imgs = imgController_.getBoardImagesAcyncResult();
-                    } catch (std::runtime_error &ex) {
-                        DEBUG(ex.what())
+                    } catch (Net::NetworkError &ex) {
+                        emit sigCachingError(ex.what());
+                        return;
                     }
 
                     DEBUG("imgs.size:" << imgs.size());
@@ -55,16 +55,17 @@ public:
                         if (tile.Value == hiddenValue())
                             continue;
 
-                        size_t isz = static_cast<size_t>(tile.Value - 1);
+                        size_t isz = static_cast<size_t>(tile.Value - 1); // get index of image for current tile
                         tile.Image = std::move(imgs[isz]);
                     }
 
                     emit sigImagesCached();
                 },
                 Qt::QueuedConnection);
-        }
 
-        boardElements_.resize(dimension_ * dimension_);
+            // run acync task
+            imgController_.getBoardImagesAsync({ dimension_, dimension_ });
+        }
 
         // fill with 1,2,3,4,5,...,0
         std::iota(boardElements_.begin(), boardElements_.end(), 1);
@@ -149,6 +150,8 @@ public:
 signals:
     void sigImagesCached();
 
+    void sigCachingError(QString errorString);
+
 private:
     Position getRowCol(int index) const
     {
@@ -162,9 +165,11 @@ private:
 
     void shaffleBoard()
     {
+        static std::random_device rd;
+        static std::mt19937 generator(rd());
+
         do {
-            std::random_shuffle(boardElements_.begin(), boardElements_.end());
-            //DEBUG("isBoardSolvable" <<isBoardSolvable())
+            std::shuffle(boardElements_.begin(), boardElements_.end(), generator);
         } while ((! isBoardSolvable()) || isGameWon());
     }
 
@@ -252,9 +257,9 @@ private:
     }
 
 private:
-    Image::BoardImageController imgController_;
-    QVector<TileData> boardElements_;
     int dimension_;
+    QVector<TileData> boardElements_;
+    Image::BoardImageController imgController_;
 };
 
 

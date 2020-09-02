@@ -48,8 +48,7 @@ GridView {
             anchors.fill: wonTxt
 
             onClicked: {
-                root.model.dimension++
-                root.model.dimension--
+                root.model.resetBoard()
                 mouse.accepted = true
             }
         }

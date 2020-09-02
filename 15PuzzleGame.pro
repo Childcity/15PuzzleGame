@@ -18,22 +18,24 @@ RESOURCES += qml.qrc
 
 INCLUDEPATH += src/
 
+include(src/Utils/StdFutureWatcher/src/StdFutureWatcher.pri)
+
 HEADERS += \
-    src/Dal/image/boardimagecontroller.h \
-	src/Dal/image/flickrimageprovider.h \
-	src/Dal/image/irundomimageprovider.h \
+	src/Dal/Image/boardimagecontroller.h \
+	src/Dal/Image/Providers/flickrimageprovider.h \
+	src/Dal/Image/Providers/irundomimageprovider.h \
     src/Net/networkerror.h \
 	src/main.h \
 	src/Dal/gameboardmodel.h \
 	src/Dal/tiledata.h \
 	src/Dal/board.h \
 	src/Net/downloader.h \
-    src/Net/idownloader.h
+	src/Net/idownloader.h
 
 SOURCES += \
-    src/Dal/image/boardimagecontroller.cpp \
-	src/Dal/image/flickrimageprovider.cpp \
-	src/Dal/image/irundomimageprovider.cpp \
+	src/Dal/Image/boardimagecontroller.cpp \
+	src/Dal/Image/Providers/flickrimageprovider.cpp \
+	src/Dal/Image/Providers/irundomimageprovider.cpp \
     src/Net/networkerror.cpp \
 	src/main.cpp \
 	src/Dal/gameboardmodel.cpp \
