@@ -1,6 +1,5 @@
 import QtQuick 2.11
 import QtQuick.Window 2.11
-import GameBoardModel 1.0
 
 Rectangle {
     id: root

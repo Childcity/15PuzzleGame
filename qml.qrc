@@ -3,6 +3,6 @@
         <file>src/qml/main.qml</file>
         <file>src/qml/GameBoard.qml</file>
         <file>src/qml/Tile.qml</file>
-        <file>src/qml/GameWon.qml</file>
+		<file>src/qml/GameWon.qml</file>
     </qresource>
 </RCC>
