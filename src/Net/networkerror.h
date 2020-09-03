@@ -13,11 +13,7 @@ class NetworkError : public std::runtime_error {
 public:
     using NetErrorCode = QNetworkReply::NetworkError;
 
-    NetworkError(NetErrorCode errorCode)
-        : std::runtime_error(
-              QMetaEnum::fromType<NetErrorCode>().valueToKey(errorCode))
-        , ErrorCode(errorCode)
-    {}
+    NetworkError(NetErrorCode errorCode);
 
     NetErrorCode ErrorCode;
 };

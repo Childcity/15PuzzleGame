@@ -21,69 +21,27 @@ class GameBoardModel : public QAbstractListModel {
     Q_PROPERTY(bool isGameWon READ isGameWon NOTIFY sigGameWonChanged)
 
 public:
-    GameBoardModel(QObject *parent = nullptr)
-        : QAbstractListModel(parent)
-    {
-        createBoard();
-    }
+    GameBoardModel(QObject *parent = nullptr);
 
     // QAbstractItemModel interface
 public:
-    int rowCount(const QModelIndex & = QModelIndex()) const override { return board_->tilesNumber(); }
+    int rowCount(const QModelIndex & = QModelIndex()) const override;
 
-    QVariant data(const QModelIndex &index, int role) const override
-    {
-        if (index.isValid()) {
-            if (role == Qt::DisplayRole) {
-                return QVariant::fromValue((*board_)[index.row()]);
-            }
-        }
-
-        return {};
-    }
+    QVariant data(const QModelIndex &index, int role) const override;
 
 public:
-    int dimension() const { return board_->dimension(); }
+    int dimension() const;
 
-    int hiddenIndex() const { return board_->hiddenIndex(); }
+    int hiddenIndex() const;
 
-    bool isGameWon() const { return board_->isGameWon(); }
+    bool isGameWon() const;
 
 public slots:
-    void resetBoard()
-    {
-        setDimension(dimension());
-    }
+    void resetBoard();
 
-    void setDimension(int dimension)
-    {
-        beginResetModel();
-        {
-            createBoard(dimension);
-        }
-        endResetModel();
+    void setDimension(int dimension);
 
-        emit sigDimensionChanged();
-        emit sigGameWonChanged(false);
-    }
-
-    void move(int index)
-    {
-        if (! board_->isMovable(index))
-            return;
-
-        beginResetModel();
-        {
-            board_->move(index);
-        }
-        endResetModel();
-
-        if (board_->isGameWon()) {
-            emit sigGameWonChanged(true);
-        } else {
-            emit sigGameWonChanged(false);
-        }
-    }
+    void move(int index);
 
 signals:
     void sigDimensionChanged();
@@ -93,20 +51,13 @@ signals:
     void sigGameBoardError(QString errorString);
 
 private:
-    void createBoard(int dimension = 2)
-    {
-        board_ = qt_make_unique<Board>(dimension, this);
-        connect(&*board_, &Board::sigImagesCached, this, [this]{
-            beginResetModel();
-            endResetModel();
-        });
-    }
+    void createBoard(int dimension = 2);
 
 private:
     qt_unique_ptr<Board> board_;
 };
 
 
-}
+} // namespace Dal
 
 #endif // GAMEBOARDMODEL_H
