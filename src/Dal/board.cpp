@@ -12,33 +12,32 @@ Board::Board(int dimension, QObject *parent)
     // get Async images for board
     {
         connect(
-                    &imgController_, &Image::BoardImageController::sigBoardImagesReady,
-                    this, [this] {
-            std::vector<QByteArray> imgs;
+            &imgController_, &Image::BoardImageController::sigBoardImagesReady,
+            this, [this] {
+                std::vector<QByteArray> imgs;
 
-            try {
-                // move result from async task to vector
-                imgs = imgController_.getBoardImagesAcyncResult();
-            } catch (Net::NetworkError &ex) {
-                emit sigCachingError(ex.what());
-                return;
-            }
+                try {
+                    // move result from async task to vector
+                    imgs = imgController_.getBoardImagesAcyncResult();
+                } catch (Net::NetworkError &ex) {
+                    emit sigCachingError(ex.what());
+                    return;
+                }
 
-            DEBUG("imgs.size:" << imgs.size());
-            assert(static_cast<int>(imgs.size()) == boardElements_.size());
+                assert(static_cast<int>(imgs.size()) == boardElements_.size());
 
-            // update boardElements_ with new images
-            for (auto &tile : boardElements_) {
-                if (tile.Value == hiddenValue())
-                    continue;
+                // update boardElements_ with new images
+                for (auto &tile : boardElements_) {
+                    if (tile.Value == hiddenValue())
+                        continue;
 
-                size_t isz = static_cast<size_t>(tile.Value - 1); // get index of image for current tile
-                tile.Image = std::move(imgs[isz]);
-            }
+                    size_t isz = static_cast<size_t>(tile.Value - 1); // get index of image for current tile
+                    tile.Image = std::move(imgs[isz]);
+                }
 
-            emit sigImagesCached();
-        },
-        Qt::QueuedConnection);
+                emit sigImagesCached();
+            },
+            Qt::QueuedConnection);
 
         // run acync task
         imgController_.getBoardImagesAsync({ dimension_, dimension_ });
@@ -59,19 +58,19 @@ Board::~Board()
 void Board::move(int index)
 {
     const Position posToMove = getRowCol(index);
-    const Position hidPos = getRowCol(hiddenIndex());
+    const Position hiddenPos = getRowCol(hiddenIndex());
 
     ShiftDirection direction {};
     int count {};
 
-    if (posToMove.first == hidPos.first) { // shift Left/Right
-        count = posToMove.second - hidPos.second;
+    if (posToMove.first == hiddenPos.first) { // shift Left/Right
+        count = posToMove.second - hiddenPos.second;
         // if count is positive, then posToMove to the Left of the hidden tile
         // so we should move all tiles to the Right
         // else to the Left
         direction = count > 0 ? ShiftDirection::Right : ShiftDirection::Left;
-    } else if (posToMove.second == hidPos.second) { // shift Top/Bottom
-        count = posToMove.first - hidPos.first;
+    } else if (posToMove.second == hiddenPos.second) { // shift Top/Bottom
+        count = posToMove.first - hiddenPos.first;
         // if count is positive, then posToMove to the Top of the hidden tile
         // so we should move all tiles to the Bottom
         // else to the Top
@@ -81,7 +80,7 @@ void Board::move(int index)
     assert(count != 0);
 
     count = count > 0 ? count : -count;
-    shift2D(boardElements_, hidPos, count, direction);
+    shift2D(boardElements_, hiddenPos, count, direction);
 }
 
 int Board::tilesNumber() const
@@ -200,6 +199,8 @@ void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int co
         for (int i = strtIndx; i <= endIndx; ++i) {
             vec[getIndex({ row, i - 1 })].swap(vec[getIndex({ row, i })]);
         }
+        DEBUG("strtIndx" << getIndex({ row, strtIndx }) << "endIndx" << getIndex({ row, endIndx }));
+        DEBUG("strtIndx" << strtIndx << "endIndx" << endIndx);
     } else if (direction == ShiftDirection::Left) {
         int strtIndx = col - 1;
         int endIndx = col - count;
@@ -208,6 +209,8 @@ void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int co
         for (int i = strtIndx; i >= endIndx; --i) {
             vec[getIndex({ row, i + 1 })].swap(vec[getIndex({ row, i })]);
         }
+        DEBUG("strtIndx" << getIndex({ row, strtIndx }) << "endIndx" << getIndex({ row, endIndx }));
+        DEBUG("strtIndx" << strtIndx << "endIndx" << endIndx);
     } else if (direction == ShiftDirection::Bottom) {
         int strtIndx = row + 1;
         int endIndx = row + count;
@@ -216,6 +219,8 @@ void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int co
         for (int i = strtIndx; i <= endIndx; ++i) {
             vec[getIndex({ i - 1, col })].swap(vec[getIndex({ i, col })]);
         }
+        DEBUG("strtIndx" << getIndex({ strtIndx, col }) << "endIndx" << getIndex({ endIndx, col }));
+        DEBUG("strtIndx" << strtIndx << "endIndx" << endIndx);
     } else if (direction == ShiftDirection::Top) {
         int strtIndx = row - 1;
         int endIndx = row - count;
@@ -224,8 +229,10 @@ void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int co
         for (int i = strtIndx; i >= endIndx; --i) {
             vec[getIndex({ i + 1, col })].swap(vec[getIndex({ i, col })]);
         }
+        DEBUG("strtIndx" << getIndex({ strtIndx, col }) << "endIndx" << getIndex({ endIndx, col }));
+        DEBUG("strtIndx" << strtIndx << "endIndx" << endIndx);
     }
 }
 
 
-}
+} // namespace Dal
