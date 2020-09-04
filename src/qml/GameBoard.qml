@@ -1,6 +1,5 @@
 import QtQuick 2.11
 import QtQuick.Window 2.11
-import QtQuick.Controls 2.2
 import GameBoardModel 1.0
 
 GridView {
@@ -36,24 +35,21 @@ GridView {
                     root.model.move(index)
                 }
             }
+
         }
     }
 
-    GameWon {
+    move: Transition {
+        NumberAnimation {properties: "x,y"; duration: 1000; easing.type: Easing.OutBounce }
+    }
+    GameWonPopup {
         id: wonTxt
-        anchors.centerIn: root
         width: root.width - root.width / 8
         height: root.height - root.height / 2
-        color: "#66c4edc4"
         visible: root.model.isGameWon
 
-        MouseArea {
-            anchors.fill: wonTxt
-
-            onClicked: {
-                root.model.resetBoard()
-                mouse.accepted = true
-            }
+        onAboutToHide: {
+            root.model.resetBoard()
         }
     }
 

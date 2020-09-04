@@ -19,10 +19,10 @@ Rectangle {
         id: img
         source: {
             if (tileImg.length === 0) {
-                visible = false
+                img.visible = false
                 loadingImg.visible = true
             } else {
-                visible = true
+                img.visible = true
                 loadingImg.visible = false
             }
             return tileImg

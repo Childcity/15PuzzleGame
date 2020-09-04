@@ -4,7 +4,7 @@
 Dal::GameBoardModel::GameBoardModel(QObject *parent)
     : QAbstractListModel(parent)
 {
-    createBoard();
+    createBoard(3);
 }
 
 int Dal::GameBoardModel::rowCount(const QModelIndex &) const
@@ -61,9 +61,12 @@ void Dal::GameBoardModel::move(int index)
         return;
 
     beginResetModel();
+    DEBUG(index)
+    //beginMoveRows({}, index, index, {}, 0);
     {
         board_->move(index);
     }
+    //endMoveRows();
     endResetModel();
 
     if (board_->isGameWon()) {
