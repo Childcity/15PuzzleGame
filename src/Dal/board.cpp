@@ -79,7 +79,7 @@ void Board::move(int index)
 
     assert(count != 0);
 
-    count = count > 0 ? count : -count;
+    count = std::abs(count);
     shift2D(boardElements_, hiddenPos, count, direction);
 }
 
@@ -135,8 +135,9 @@ int Board::getIndex(Board::Position pos) const
 
 void Board::shaffleBoard()
 {
-    static std::random_device rd;
-    static std::mt19937 generator(rd());
+    using std::chrono::system_clock;
+    static const auto seed = system_clock::now().time_since_epoch().count();
+    static std::mt19937 generator((std::random_device()() ^ seed));
 
     do {
         std::shuffle(boardElements_.begin(), boardElements_.end(), generator);
@@ -199,8 +200,6 @@ void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int co
         for (int i = strtIndx; i <= endIndx; ++i) {
             vec[getIndex({ row, i - 1 })].swap(vec[getIndex({ row, i })]);
         }
-        DEBUG("strtIndx" << getIndex({ row, strtIndx }) << "endIndx" << getIndex({ row, endIndx }));
-        DEBUG("strtIndx" << strtIndx << "endIndx" << endIndx);
     } else if (direction == ShiftDirection::Left) {
         int strtIndx = col - 1;
         int endIndx = col - count;
@@ -209,8 +208,6 @@ void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int co
         for (int i = strtIndx; i >= endIndx; --i) {
             vec[getIndex({ row, i + 1 })].swap(vec[getIndex({ row, i })]);
         }
-        DEBUG("strtIndx" << getIndex({ row, strtIndx }) << "endIndx" << getIndex({ row, endIndx }));
-        DEBUG("strtIndx" << strtIndx << "endIndx" << endIndx);
     } else if (direction == ShiftDirection::Bottom) {
         int strtIndx = row + 1;
         int endIndx = row + count;
@@ -219,8 +216,6 @@ void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int co
         for (int i = strtIndx; i <= endIndx; ++i) {
             vec[getIndex({ i - 1, col })].swap(vec[getIndex({ i, col })]);
         }
-        DEBUG("strtIndx" << getIndex({ strtIndx, col }) << "endIndx" << getIndex({ endIndx, col }));
-        DEBUG("strtIndx" << strtIndx << "endIndx" << endIndx);
     } else if (direction == ShiftDirection::Top) {
         int strtIndx = row - 1;
         int endIndx = row - count;
@@ -229,8 +224,6 @@ void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int co
         for (int i = strtIndx; i >= endIndx; --i) {
             vec[getIndex({ i + 1, col })].swap(vec[getIndex({ i, col })]);
         }
-        DEBUG("strtIndx" << getIndex({ strtIndx, col }) << "endIndx" << getIndex({ endIndx, col }));
-        DEBUG("strtIndx" << strtIndx << "endIndx" << endIndx);
     }
 }
 
