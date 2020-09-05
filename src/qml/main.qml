@@ -5,8 +5,8 @@ Window {
     id: root
     title: qsTr("15 Puzzle")
     visible: true
-    width: 300
-    height: 300
+    width: 600
+    height: 600
 
     GameBoard {
         id: board
