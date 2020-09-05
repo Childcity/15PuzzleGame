@@ -39,9 +39,6 @@ GridView {
         }
     }
 
-    move: Transition {
-        NumberAnimation {properties: "x,y"; duration: 1000; easing.type: Easing.OutBounce }
-    }
     GameWonPopup {
         id: wonTxt
         width: root.width - root.width / 8
