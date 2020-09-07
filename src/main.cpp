@@ -1,5 +1,6 @@
 #include "Dal/gameboardmodel.h"
 
+#include <QFont>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QVector>
@@ -10,6 +11,12 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     {
+        // set default font
+        app.setFont({"Ubuntu", 12});
+    }
+
+    {
+        // register qml types
         qmlRegisterType<Dal::GameBoardModel>("GameBoardModel", 1,0, "GameBoardModel");
     }
 
