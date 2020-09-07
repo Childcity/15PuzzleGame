@@ -12,8 +12,11 @@ GridView {
     model: GameBoardModel {
         onSigGameBoardError: {
             // arg1: errorString
-            //errInfo.errText = errorString;
-            //errInfo.visible = true;
+            if (errorString === "TimeoutError") {
+                errorPopup.errMsg = "Can't download image: " + errorString;
+            }
+
+            errorPopup.visible = true;
         }
     }
 
@@ -40,10 +43,21 @@ GridView {
     }
 
     GameWonPopup {
-        id: wonTxt
+        id: wonPopup
         width: root.width - root.width / 8
         height: root.height - root.height / 2
         visible: root.model.isGameWon
+
+        onAboutToHide: {
+            root.model.resetBoard()
+        }
+    }
+
+    ErrorMsgPopup {
+        id: errorPopup
+        width: root.width - root.width / 3
+        height: root.height - root.height / 1.4
+        visible: false
 
         onAboutToHide: {
             root.model.resetBoard()

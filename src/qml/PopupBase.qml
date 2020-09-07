@@ -11,8 +11,8 @@ Popup {
     //transformOrigin: Item.Center
     x: parent ? ((parent.width - width) / 2) : 0
     y: parent ? ((parent.height - height) / 2) : 0
-    width: parent ? (parent.width / 2 - margin) : 128
-    height: parent ? (parent.height / 2 - margin) : 128
+    width: parent ? (parent.width / 2) : 128
+    height: parent ? (parent.height / 2) : 128
     padding: 0
 
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnReleaseOutside
