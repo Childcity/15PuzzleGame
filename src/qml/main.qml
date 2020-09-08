@@ -1,7 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Window 2.3
-import QtQuick.Layouts 1.3
 
 ApplicationWindow {
     id: root
@@ -19,7 +18,7 @@ ApplicationWindow {
 
     GameBoard {
         id: board
-        anchors.fill: parent
+        anchors.fill: root.contentItem
         anchors.margins: 5
     }
 
