@@ -26,7 +26,7 @@ Popup {
    }
 
     exit: Transition {
-        NumberAnimation {
+        PropertyAnimation {
            property: "opacity";
            from: 1.0; to: 0.3
            duration: 500

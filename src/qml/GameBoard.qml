@@ -4,6 +4,7 @@ import GameBoardModel 1.0
 
 GridView {
 	id: root
+    interactive: false
     cellWidth: root.width / root.model.dimension
     cellHeight: root.height / root.model.dimension
     //highlight: Rectangle { color: "lightsteelblue"; radius: 10 }
