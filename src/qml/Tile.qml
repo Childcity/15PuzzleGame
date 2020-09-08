@@ -1,5 +1,5 @@
 import QtQuick 2.11
-import QtQuick.Window 2.11
+import "CustomControls" as Custom
 
 Rectangle {
     id: root
@@ -34,23 +34,6 @@ Rectangle {
     }
 
     Text {
-        id: loadingImg
-        anchors.fill: root
-        anchors.margins: 2
-        clip: true
-        text: "Loading..."
-        font {
-            pointSize: {
-                var ps = Math.min(root.width, root.height) / 8
-                return ps > 1 ? ps : 1
-            }
-
-            family: "Ubuntu"
-            bold: true
-        }
-    }
-
-    Text {
         id: txt
         text: tileText
         anchors.centerIn: root
@@ -64,5 +47,12 @@ Rectangle {
             family: "Ubuntu"
             bold: true
         }
+    }
+
+    Custom.RoundBusyIndicator {
+        id: loadingImg
+        anchors.fill: root
+        // changing scale according to zoom of Tile
+        scale: 2 * Math.min(root.width, root.height)/300
     }
 }
