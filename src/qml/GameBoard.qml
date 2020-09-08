@@ -11,6 +11,7 @@ GridView {
 
 
     model: GameBoardModel {
+        dimension: 3
         onSigGameBoardError: {
             // arg1: errorString
             if (errorString === "TimeoutError") {

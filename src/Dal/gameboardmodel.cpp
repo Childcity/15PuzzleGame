@@ -3,12 +3,11 @@
 
 Dal::GameBoardModel::GameBoardModel(QObject *parent)
     : QAbstractListModel(parent)
-{
-    createBoard(3);
-}
+{}
 
 int Dal::GameBoardModel::rowCount(const QModelIndex &) const
 {
+    assert(board_);
     return board_->tilesNumber();
 }
 
@@ -16,6 +15,7 @@ QVariant Dal::GameBoardModel::data(const QModelIndex &index, int role) const
 {
     if (index.isValid()) {
         if (role == Qt::DisplayRole) {
+            assert(board_);
             return QVariant::fromValue((*board_)[index.row()]);
         }
     }
@@ -25,16 +25,19 @@ QVariant Dal::GameBoardModel::data(const QModelIndex &index, int role) const
 
 int Dal::GameBoardModel::dimension() const
 {
+    assert(board_);
     return board_->dimension();
 }
 
 int Dal::GameBoardModel::hiddenIndex() const
 {
+    assert(board_);
     return board_->hiddenIndex();
 }
 
 bool Dal::GameBoardModel::isGameWon() const
 {
+    assert(board_);
     return board_->isGameWon();
 }
 
@@ -57,6 +60,7 @@ void Dal::GameBoardModel::setDimension(int dimension)
 
 void Dal::GameBoardModel::move(int index)
 {
+    assert(board_);
     if (! board_->isMovable(index))
         return;
 
