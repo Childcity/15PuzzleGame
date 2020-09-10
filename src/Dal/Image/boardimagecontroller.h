@@ -5,8 +5,6 @@
 #include "Dal/Image/Providers/flickrimageprovider.h"
 #include "Utils/StdFutureWatcher/src/futurewatcher.hpp"
 
-#include <QtConcurrent>
-#include <QFuture>
 #include <QBuffer>
 #include <QPoint>
 #include <any>

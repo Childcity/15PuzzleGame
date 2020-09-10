@@ -1,6 +1,8 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import AppSettings 1.0
+import ImageProviderType 1.0
 
 ToolBar {
     id: root
@@ -10,6 +12,7 @@ ToolBar {
     height: 30
     readonly property int menuItemHeight: 40
     readonly property int menuWidth: 200
+    readonly property int menuPading: 5
 
     property var enterAnimation: Transition {
         PropertyAnimation {
@@ -39,9 +42,9 @@ ToolBar {
 
     Menu {
         id: fileMenu
-        padding: 5
+        padding: menuPading
         implicitWidth: menuWidth
-        implicitHeight: contentItem.implicitHeight + 2 * fileMenu.padding
+        implicitHeight: contentItem.implicitHeight + 2 * menuPading
         enter: enterAnimation
 
         MenuItem {
@@ -55,29 +58,53 @@ ToolBar {
         id: editMenu
         implicitWidth: menuWidth
         enter: enterAnimation
-        padding: 5
-
-        //implicitHeight: menuItemHeight + 2 * imgProvider.padding
+        padding: menuPading
 
         Menu {
             id: imgProvider
-            padding: 5
-            implicitWidth: radButLay.implicitWidth + 2 * imgProvider.padding
-            implicitHeight: contentItem.implicitHeight + 2 * imgProvider.padding
+            padding: menuPading
+            implicitWidth: providerColLay.implicitWidth + 2 * menuPading
+            implicitHeight: contentItem.implicitHeight + 2 * menuPading
             enter: enterAnimation
             title: qsTr("Image provider");
 
             ColumnLayout {
-                id: radButLay
+                id: providerColLay
                 spacing: 2
                 RadioButton {
                     text: qsTr("www.flickr.com")
-                    checked: true
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
+                    checked: AppSettings.imageProvider === ImageProviderType.Flickr
+                    onToggled: AppSettings.imageProvider = ImageProviderType.Flickr
                 }
                 RadioButton {
                     text: qsTr("www.p***hub.com")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
+                    checked: AppSettings.imageProvider === ImageProviderType.Prnhub
+                    onToggled: AppSettings.imageProvider = ImageProviderType.Prnhub
+                }
+            }
+        }
+
+        Menu {
+            id: dimensionMenu
+            padding: menuPading
+            implicitWidth: dimensionColLay.implicitWidth + 2 * menuPading
+            implicitHeight: contentItem.implicitHeight + 2 * menuPading
+            enter: enterAnimation
+            title: qsTr("Board dimension");
+
+            ColumnLayout {
+                id: dimensionColLay
+                spacing: 2
+                Repeater {
+                    model: 4
+                    delegate: RadioButton {
+                        text: qsTr((index+2) + "x" + (index+2))
+                        Layout.preferredHeight: menuItemHeight
+                        checked: (index+2) === AppSettings.dimension ? true : false
+                        onToggled: AppSettings.dimension = (index+2)
+                    }
                 }
             }
         }

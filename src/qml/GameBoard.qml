@@ -1,6 +1,7 @@
 import QtQuick 2.11
 import QtQuick.Window 2.11
 import GameBoardModel 1.0
+import AppSettings 1.0
 
 GridView {
 	id: root
@@ -11,7 +12,8 @@ GridView {
 
 
     model: GameBoardModel {
-        dimension: 3
+        dimension: AppSettings.dimension
+        //imageProvider: AppSettings.imageProvider
         onSigGameBoardError: {
             // arg1: errorString
             if (errorString === "TimeoutError") {
@@ -63,6 +65,13 @@ GridView {
 
         onAboutToHide: {
             root.model.resetBoard()
+        }
+    }
+
+    Component.onCompleted: {
+        if (! AppSettings.isValid()) {
+            errorPopup.errMsg = "Settings can't be saved / loaded...\nError: " + AppSettings.status()
+            errorPopup.visible = true
         }
     }
 

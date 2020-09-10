@@ -1,4 +1,10 @@
 #include "board.h"
+#include "main.h"
+#include "Net/networkerror.h"
+
+#include <QVector>
+#include <algorithm>
+#include <random>
 
 
 namespace Dal {

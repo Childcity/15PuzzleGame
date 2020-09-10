@@ -1,13 +1,8 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "main.h"
 #include "Dal/Image/boardimagecontroller.h"
-#include "Net/networkerror.h"
 #include "tiledata.h"
-
-#include <QVector>
-#include <algorithm>
 
 
 namespace Dal {

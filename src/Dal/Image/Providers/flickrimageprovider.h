@@ -15,7 +15,7 @@ namespace Dal::Image {
 
 class FlickrImageProvider : public IRundomImageProvider {
 public:
-    FlickrImageProvider(std::shared_ptr<Net::IDownloader> downloader);
+    explicit FlickrImageProvider(std::shared_ptr<Net::IDownloader> downloader);
 
     ~FlickrImageProvider() override;
 

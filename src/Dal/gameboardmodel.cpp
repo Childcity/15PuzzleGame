@@ -37,7 +37,9 @@ int Dal::GameBoardModel::hiddenIndex() const
 
 bool Dal::GameBoardModel::isGameWon() const
 {
-    assert(board_);
+    if (! board_)
+        return false;
+
     return board_->isGameWon();
 }
 

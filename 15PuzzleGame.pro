@@ -21,28 +21,35 @@ INCLUDEPATH += src/
 include(src/Utils/StdFutureWatcher/src/StdFutureWatcher.pri)
 
 HEADERS += \
+    src/Dal/Image/Providers/imageproviderfactory.h \
+    src/Dal/Image/Providers/imageprovidertype.h \
 	src/Dal/Image/boardimagecontroller.h \
 	src/Dal/Image/Providers/flickrimageprovider.h \
 	src/Dal/Image/Providers/irundomimageprovider.h \
     src/Net/networkerror.h \
+    src/appsettings.h \
 	src/main.h \
 	src/Dal/gameboardmodel.h \
 	src/Dal/tiledata.h \
 	src/Dal/board.h \
 	src/Net/downloader.h \
-	src/Net/idownloader.h
+	src/Net/idownloader.h \
+    src/gamecontroller.h
 
 SOURCES += \
+    src/Dal/Image/Providers/imageproviderfactory.cpp \
 	src/Dal/Image/boardimagecontroller.cpp \
 	src/Dal/Image/Providers/flickrimageprovider.cpp \
 	src/Dal/Image/Providers/irundomimageprovider.cpp \
     src/Net/networkerror.cpp \
+    src/appsettings.cpp \
 	src/main.cpp \
 	src/Dal/gameboardmodel.cpp \
 	src/Dal/tiledata.cpp \
 	src/Dal/board.cpp \
 	src/Net/downloader.cpp \
-    src/Net/idownloader.cpp
+    src/Net/idownloader.cpp \
+    src/gamecntroller.cpp
 
 release:DESTDIR = release
 release:OBJECTS_DIR = release/obj
