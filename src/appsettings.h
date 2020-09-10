@@ -14,7 +14,7 @@ class AppSettings : public QObject {
     Q_OBJECT
 
     Q_PROPERTY(int dimension READ dimension WRITE setDimension NOTIFY sigDimensionChanged)
-    Q_PROPERTY(ImageProviderType::Value imageProvider READ imageProvider WRITE setImageProvider NOTIFY sigImageProvider)
+    Q_PROPERTY(ImageProviderType::Value imageProvider READ imageProvider WRITE setImageProvider NOTIFY sigImageProviderChanged)
 
     explicit AppSettings(QObject *parent = nullptr);
 
@@ -59,7 +59,7 @@ public:
 signals:
     void sigDimensionChanged(int dimension);
 
-    void sigImageProvider(ImageProviderType::Value imageProvider);
+    void sigImageProviderChanged(ImageProviderType::Value imageProvider);
 
     void sigSettingsError(QString errorString) const;
 
@@ -81,7 +81,7 @@ public slots:
             return;
 
         settings_.setValue("imageProvider", imageProvider);
-        emit sigImageProvider(imageProvider);
+        emit sigImageProviderChanged(imageProvider);
     }
 
     bool isValid() const
