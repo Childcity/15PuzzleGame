@@ -24,12 +24,12 @@ int main(int argc, char *argv[])
         qmlRegisterSingletonType<AppSettings>("AppSettings", 1, 0, "AppSettings", AppSettings::Get);
         qmlRegisterType<Dal::GameBoardModel>("GameBoardModel", 1, 0, "GameBoardModel");
         qmlRegisterType<GameController>("GameController", 1, 0, "GameController");
-        qmlRegisterUncreatableType<ImageProviderType>("ImageProviderType", 1, 0, "ImageProviderType", "ImageProviderType is a Enum and can't b instantiated!");
-        qRegisterMetaType<ImageProviderType::Value>("ImageProviderType::Value");
+        qmlRegisterUncreatableType<Dal::Image::ImageProviderTypeClass>("ImageProviderType", 1, 0, "ImageProviderType", "ImageProviderType is a Enum and can't b instantiated!");
+        qRegisterMetaType<Dal::Image::ImageProviderType>("ImageProviderType");
     }
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/src/qml/main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:/src/Qml/MainWindow.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
 

@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+		<file>src/Qml/MainWindow.qml</file>
+		<file>src/Qml/GameBoard.qml</file>
+		<file>src/Qml/Tile.qml</file>
+		<file>src/Qml/GameWonPopup.qml</file>
+		<file>src/Qml/PopupBase.qml</file>
+		<file>src/Qml/ErrorMsgPopup.qml</file>
+		<file>src/Qml/MainMenuBar.qml</file>
+		<file>src/Qml/CustomControls/RoundBusyIndicator.qml</file>
+    </qresource>
+</RCC>

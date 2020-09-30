@@ -13,7 +13,7 @@ class ImageProviderFactory {
 public:
     ImageProviderFactory() = delete;
 
-    IRundomImageProvider *CreateImageProvider(ImageProviderType::Value type, std::shared_ptr<Net::IDownloader> downloader)
+    IRundomImageProvider *CreateImageProvider(ImageProviderType type, std::shared_ptr<Net::IDownloader> downloader)
     {
         if (type == ImageProviderType::Flickr) {
             return new FlickrImageProvider(downloader);
