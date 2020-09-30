@@ -4,7 +4,10 @@ using Dal::Image::ImageProviderTypeClass;
 
 AppSettings::AppSettings(QObject *parent)
     : QObject(parent)
-    , settings_("./" + QGuiApplication::applicationName() + ".ini", QSettings::Format::IniFormat)
+    , settings_(QCoreApplication::applicationDirPath() +
+                    "/" + QGuiApplication::applicationName() +
+                    ".ini",
+                QSettings::Format::IniFormat)
 {}
 
 AppSettings &AppSettings::Get()
@@ -65,7 +68,7 @@ bool AppSettings::isValid() const
 {
     if (! settings_.isWritable() || settings_.status() != QSettings::Status::NoError) {
         DEBUG(settings_.status() << settings_.isWritable());
-        emit sigSettingsError(QString() + settings_.status());
+        //emit sigSettingsError(QString() + settings_.status());
     }
     return true;
 }

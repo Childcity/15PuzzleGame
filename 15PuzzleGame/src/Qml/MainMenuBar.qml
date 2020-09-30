@@ -74,13 +74,13 @@ ToolBar {
                 RadioButton {
                     text: qsTr("www.flickr.com")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
-                    checked: AppSettings.imageProvider === ImageProviderType.Flickr
+                    checked: AppSettings.imageProvider == ImageProviderType.Flickr
                     onToggled: AppSettings.imageProvider = ImageProviderType.Flickr
                 }
                 RadioButton {
                     text: qsTr("www.p***hub.com")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
-                    checked: AppSettings.imageProvider === ImageProviderType.Phub
+                    checked: AppSettings.imageProvider == ImageProviderType.Phub
                     onToggled: AppSettings.imageProvider = ImageProviderType.Phub
                 }
             }

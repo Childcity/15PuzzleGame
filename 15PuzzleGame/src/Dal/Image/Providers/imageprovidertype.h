@@ -23,13 +23,13 @@ public:
 
     static Value fromVariant(const QVariant &var)
     {
-        return var.value<ImageProviderTypeClass::Value>();
+        return var.value<Value>();
     }
 
-    static bool isValid(ImageProviderTypeClass::Value type)
+    static bool isValid(Value type)
     {
-        return type == ImageProviderTypeClass::Value::Flickr ||
-               type == ImageProviderTypeClass::Value::Phub;
+        return type == Value::Flickr ||
+               type == Value::Phub;
     }
 };
 
