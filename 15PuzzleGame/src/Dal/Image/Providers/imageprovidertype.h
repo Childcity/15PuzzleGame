@@ -17,7 +17,7 @@ public:
     enum Value
     {
         Flickr,
-        Prnhub
+        Phub
     };
     Q_ENUM(Value)
 
@@ -29,7 +29,7 @@ public:
     static bool isValid(ImageProviderTypeClass::Value type)
     {
         return type == ImageProviderTypeClass::Value::Flickr ||
-               type == ImageProviderTypeClass::Value::Prnhub;
+               type == ImageProviderTypeClass::Value::Phub;
     }
 };
 
@@ -37,6 +37,5 @@ using ImageProviderType = ImageProviderTypeClass::Value;
 
 
 } // namespace Dal::Image
-
 
 #endif // IMAGEPROVIDERTYPE_H

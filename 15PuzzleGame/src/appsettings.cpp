@@ -1,6 +1,6 @@
 #include "appsettings.h"
 
-//using namespace Dal::Image;
+using Dal::Image::ImageProviderTypeClass;
 
 AppSettings::AppSettings(QObject *parent)
     : QObject(parent)
@@ -32,15 +32,15 @@ int AppSettings::dimension() const
 
 ImageProviderType AppSettings::imageProvider() const
 {
-    //auto type = ImageProviderTypeClass::fromVariant(
-    //            settings_.value("imageProvider", ImageProviderType::Flickr));
-    //
-    //// check if type is valid
-    //type = ImageProviderTypeClass::isValid(type)
-    //        ? type
-    //        : ImageProviderType::Flickr;
-    //
-    //return type;
+    auto type = ImageProviderTypeClass::fromVariant(
+        settings_.value("imageProvider", ImageProviderType::Flickr));
+
+    // check if type is valid
+    type = ImageProviderTypeClass::isValid(type)
+               ? type
+               : ImageProviderType::Flickr;
+
+    return type;
 }
 
 void AppSettings::setDimension(int dimension)
@@ -48,13 +48,11 @@ void AppSettings::setDimension(int dimension)
     if (this->dimension() == dimension)
         return;
 
-    //emit sigSettingsError(QString() + settings_.status());
-
     settings_.setValue("dimension", dimension);
     emit sigDimensionChanged(dimension);
 }
 
-void AppSettings::setImageProvider(ImageProviderTypeClass::Value imageProvider)
+void AppSettings::setImageProvider(ImageProviderType imageProvider)
 {
     if (this->imageProvider() == imageProvider)
         return;
@@ -66,7 +64,8 @@ void AppSettings::setImageProvider(ImageProviderTypeClass::Value imageProvider)
 bool AppSettings::isValid() const
 {
     if (! settings_.isWritable() || settings_.status() != QSettings::Status::NoError) {
-        DEBUG(settings_.status() << settings_.isWritable())
+        DEBUG(settings_.status() << settings_.isWritable());
+        emit sigSettingsError(QString() + settings_.status());
     }
     return true;
 }

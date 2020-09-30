@@ -9,12 +9,14 @@
 #include <QQmlEngine>
 #include <mutex>
 
+using Dal::Image::ImageProviderType;
+
 
 class AppSettings : public QObject {
     Q_OBJECT
 
     Q_PROPERTY(int dimension READ dimension WRITE setDimension NOTIFY sigDimensionChanged)
-    Q_PROPERTY(ImageProviderType::Value imageProvider READ imageProvider WRITE setImageProvider NOTIFY sigImageProviderChanged)
+    Q_PROPERTY(ImageProviderType imageProvider READ imageProvider WRITE setImageProvider NOTIFY sigImageProviderChanged)
 
     explicit AppSettings(QObject *parent = nullptr);
 
@@ -26,19 +28,19 @@ public:
 public:
     int dimension() const;
 
-    Dal::Image::ImageProviderType imageProvider() const;
+    ImageProviderType imageProvider() const;
 
 signals:
     void sigDimensionChanged(int dimension);
 
-    void sigImageProviderChanged(Dal::Image::ImageProviderType imageProvider);
+    void sigImageProviderChanged(ImageProviderType imageProvider);
 
     void sigSettingsError(QString errorString) const;
 
 public slots:
     void setDimension(int dimension);
 
-    void setImageProvider(Dal::Image::ImageProviderType imageProvider);
+    void setImageProvider(ImageProviderType imageProvider);
 
     bool isValid() const;
 
