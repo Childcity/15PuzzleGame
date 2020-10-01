@@ -1,10 +1,9 @@
 #ifndef NETWORKERROR_H
 #define NETWORKERROR_H
 
+#include <QNetworkReply>
 #include <stdexcept>
 
-#include <QNetworkReply>
-#include <QMetaEnum>
 
 namespace Net {
 

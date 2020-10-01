@@ -34,7 +34,8 @@ HEADERS += \
 	src/Dal/board.h \
 	src/Net/downloader.h \
 	src/Net/idownloader.h \
-    src/gamecontroller.h
+    src/gamecontroller.h \
+    src/Net/operationcancelederror.h
 
 SOURCES += \
     src/Dal/Image/Providers/imageproviderfactory.cpp \
@@ -49,7 +50,8 @@ SOURCES += \
 	src/Dal/board.cpp \
 	src/Net/downloader.cpp \
     src/Net/idownloader.cpp \
-    src/gamecntroller.cpp
+    src/gamecntroller.cpp \
+    src/Net/operationcancelederror.cpp
 
 release:DESTDIR = release
 release:OBJECTS_DIR = release/obj

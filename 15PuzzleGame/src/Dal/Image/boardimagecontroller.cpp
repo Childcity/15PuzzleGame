@@ -1,5 +1,5 @@
 #include "boardimagecontroller.h"
-
+#include "main.h"
 
 namespace Dal::Image {
 
@@ -22,10 +22,11 @@ void BoardImageController::getBoardImagesAsync(const QPoint &dimensions)
                 std::launch::async, [dimensions]() -> BoardImages {
                     using namespace std::chrono_literals;
 
-                    const auto downloader = std::make_shared<Net::Downloader>();
+                    std::atomic_bool cancelationRequest = false;
+                    auto downloader = std::make_shared<Net::Downloader>(cancelationRequest);
                     downloader->setTimeout(5s);
 
-                    const auto imgProvider = std::make_unique<FlickrImageProvider>(downloader);
+                    auto imgProvider = std::make_unique<FlickrImageProvider>(downloader);
 
                     const QImage fullImage(imgProvider->getRundomImage());
 
