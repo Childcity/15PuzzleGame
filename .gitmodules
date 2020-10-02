@@ -1,0 +1,3 @@
+[submodule "15PuzzleGame/src/Utils/StdFutureWatcher"]
+	path = 15PuzzleGame/src/Utils/StdFutureWatcher
+	url = https://github.com/Childcity/StdFutureWatcher.git
