@@ -32,6 +32,8 @@ private:
         auto it = urls.cbegin();
         std::advance(it, rndIndex);
 
+        assert(it != urls.end());
+
         return *it;
     }
 

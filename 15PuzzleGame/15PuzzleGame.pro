@@ -35,7 +35,8 @@ HEADERS += \
 	src/Net/downloader.h \
 	src/Net/idownloader.h \
     src/gamecontroller.h \
-    src/Net/operationcancelederror.h
+    src/Net/operationcancelederror.h \
+    src/Dal/Image/Providers/phubprovider.h
 
 SOURCES += \
     src/Dal/Image/Providers/imageproviderfactory.cpp \
@@ -51,7 +52,8 @@ SOURCES += \
 	src/Net/downloader.cpp \
     src/Net/idownloader.cpp \
     src/gamecntroller.cpp \
-    src/Net/operationcancelederror.cpp
+    src/Net/operationcancelederror.cpp \
+    src/Dal/Image/Providers/phubprovider.cpp
 
 release:DESTDIR = release
 release:OBJECTS_DIR = release/obj

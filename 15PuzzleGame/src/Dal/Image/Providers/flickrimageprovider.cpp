@@ -26,38 +26,26 @@ QImage FlickrImageProvider::getRundomImage() const
     QByteArray tmpRes;
     std::list<std::string> urls;
 
-    int attempt = maxDownloadAttempts;
-    while (attempt--) {
-        try {
-            // get json array with links to images
-            {
-                tmpRes = downloader_->get(request);
-            }
+    // get json array with links to images
+    {
+        tmpRes = downloader_->get(request);
+    }
 
-            // parse response with links to different images and fill urls list
-            {
-                urls.clear();
-                auto matchesBegin = std::regex_token_iterator(tmpRes.cbegin(), tmpRes.cend(), imgUrlTemplate);
-                auto matchesEnd = std::regex_token_iterator<QByteArray::const_iterator>();
-                std::move(matchesBegin, matchesEnd, std::back_inserter(urls));
-            }
+    // parse response with links to different images and fill urls list
+    {
+        urls.clear();
+        auto matchesBegin = std::regex_token_iterator(tmpRes.cbegin(), tmpRes.cend(), imgUrlTemplate);
+        auto matchesEnd = std::regex_token_iterator<QByteArray::const_iterator>();
+        std::move(matchesBegin, matchesEnd, std::back_inserter(urls));
+    }
 
-            // get random image
-            {
-                tmpRes = downloader_->get(
-                    QNetworkRequest(
-                        QString::fromStdString(
-                            std::regex_replace(
-                                getRandomElement(urls), std::regex("\\\\"), ""))));
-            }
-
-            // if we here, we have got image correctly
-            break;
-        } catch (const Net::NetworkError &ex) {
-            DEBUG("Download error:" << ex.what() << "Attempt:" << maxDownloadAttempts - attempt);
-            if (attempt < 1)
-                throw;
-        }
+    // get random image
+    {
+        tmpRes = downloader_->get(
+            QNetworkRequest(
+                QString::fromStdString(
+                    std::regex_replace(
+                        getRandomElement(urls), std::regex("\\\\"), ""))));
     }
 
     return QImage::fromData(tmpRes);
