@@ -1,7 +1,7 @@
 #ifndef GAMEBOARDMODEL_H
 #define GAMEBOARDMODEL_H
 
-#include "main.h"
+#include "Utils/Utils.h"
 #include "board.h"
 #include "tiledata.h"
 
@@ -54,7 +54,7 @@ private:
     void createBoard(int dimension = 2);
 
 private:
-    qt_unique_ptr<Board> board_;
+    Utils::qt_unique_ptr<Board> board_;
 };
 
 

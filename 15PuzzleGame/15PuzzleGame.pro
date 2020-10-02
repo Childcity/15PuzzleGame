@@ -28,7 +28,6 @@ HEADERS += \
 	src/Dal/Image/Providers/irundomimageprovider.h \
     src/Net/networkerror.h \
     src/appsettings.h \
-	src/main.h \
 	src/Dal/gameboardmodel.h \
 	src/Dal/tiledata.h \
 	src/Dal/board.h \
@@ -36,7 +35,9 @@ HEADERS += \
 	src/Net/idownloader.h \
     src/gamecontroller.h \
     src/Net/operationcancelederror.h \
-    src/Dal/Image/Providers/phubprovider.h
+    src/Dal/Image/Providers/phubprovider.h \
+    src/Dal/Image/Providers/rundomimageproviderbase.h \
+	src/Utils/Utils.h
 
 SOURCES += \
     src/Dal/Image/Providers/imageproviderfactory.cpp \
@@ -53,7 +54,9 @@ SOURCES += \
     src/Net/idownloader.cpp \
     src/gamecntroller.cpp \
     src/Net/operationcancelederror.cpp \
-    src/Dal/Image/Providers/phubprovider.cpp
+    src/Dal/Image/Providers/phubprovider.cpp \
+	src/Dal/Image/Providers/rundomimageproviderbase.cpp \
+	src/Utils/Utils.cpp
 
 release:DESTDIR = release
 release:OBJECTS_DIR = release/obj

@@ -65,6 +65,9 @@ public:
 
 private:
 	const std::shared_ptr<Net::IDownloader> downloader_;
+
+	const QUrl getImgListUrl_ { "aHR0cHM6Ly93d3cucG9ybmh1Yi5jb20vYWxidW1zL2ZlbWFsZT9zZWFyY2g9aGVudGFp" };
+
 };
 
 

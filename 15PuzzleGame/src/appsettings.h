@@ -1,8 +1,8 @@
 #ifndef APPSETTINGS_H
 #define APPSETTINGS_H
 
-#include "main.h"
-#include <Dal/Image/Providers/imageprovidertype.h>
+#include "Utils/Utils.h"
+#include "Dal/Image/Providers/imageprovidertype.h"
 
 #include <QSettings>
 #include <QGuiApplication>

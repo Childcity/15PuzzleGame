@@ -1,7 +1,8 @@
 #ifndef GAMECNTROLLER_H
 #define GAMECNTROLLER_H
 
-#include "main.h"
+#include "Utils/Utils.h"
+
 
 class GameController : public QObject {
     Q_OBJECT

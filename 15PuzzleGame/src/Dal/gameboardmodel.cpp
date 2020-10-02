@@ -81,7 +81,7 @@ void Dal::GameBoardModel::move(int index)
 
 void Dal::GameBoardModel::createBoard(int dimension)
 {
-    board_ = qt_make_unique<Board>(dimension, this);
+    board_ = Utils::qt_make_unique<Board>(dimension, this);
     connect(&*board_, &Board::sigCachingError, this, &GameBoardModel::sigGameBoardError);
     connect(&*board_, &Board::sigImagesCached, this, [this] {
         beginResetModel();

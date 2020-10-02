@@ -1,5 +1,5 @@
 #include "board.h"
-#include "main.h"
+#include "Utils/Utils.h"
 #include "Net/networkerror.h"
 
 #include <QVector>
