@@ -38,7 +38,7 @@ private:
     size_t getFastNotSecureRandomNum(size_t min, size_t max) const;
 
 private:
-    static constexpr int maxDownloadAttempts = 5;
+    static constexpr int maxDownloadAttempts = 3;
 
     const std::shared_ptr<Net::IDownloader> downloader_;
 
