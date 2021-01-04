@@ -1,5 +1,4 @@
-#ifndef MAIN_H
-#define MAIN_H
+#pragma once
 
 #include <QDebug>
 #include <QDateTime>
@@ -41,5 +40,3 @@ inline qt_unique_ptr<T> qt_make_unique(_Types&&... _Args){
 
 #define DEBUG(msg_) qDebug() << DebugPrinter(__FILE__, __LINE__) << msg_ << "<";
 //#define DEBUGGAM(msg_) // Off debug
-
-#endif // MAIN_H

@@ -1,6 +1,13 @@
 #include "boardimagecontroller.h"
 #include "main.h"
 
+#include "Net/downloader.h"
+#include "Dal/Image/Providers/flickrimageprovider.h"
+#include "Dal/Image/Providers/phubimageprovider.h"
+
+#include <QPoint>
+
+
 namespace Dal::Image {
 
 
@@ -19,45 +26,45 @@ BoardImageController::~BoardImageController()
 void BoardImageController::getBoardImagesAsync(const QPoint &dimensions)
 {
     auto tmpFuture = std::async(
-                std::launch::async, [dimensions]() -> BoardImages {
-                    using namespace std::chrono_literals;
+        std::launch::async, [dimensions]() -> BoardImages {
+            using namespace std::chrono_literals;
 
-                    std::atomic_bool cancelationRequest = false;
-                    auto downloader = std::make_shared<Net::Downloader>(cancelationRequest);
-                    downloader->setTimeout(5s);
+            std::atomic_bool cancelationRequest = false;
+            const auto downloader = std::make_shared<Net::Downloader>(cancelationRequest);
+            downloader->setTimeout(5s);
 
-                    auto imgProvider = std::make_unique<FlickrImageProvider>(downloader);
+            const auto imgProvider = std::make_unique<PHubImageProvider>(downloader);
 
-                    const QImage fullImage(imgProvider->getRundomImage());
+            const QImage fullImage(imgProvider->getRundomImage());
 
-                    const int w = fullImage.width();
-                    const int h = fullImage.height();
-                    const int partW = w / dimensions.x();
-                    const int partH = h / dimensions.y();
+            const int w = fullImage.width();
+            const int h = fullImage.height();
+            const int partW = w / dimensions.x();
+            const int partH = h / dimensions.y();
 
-                    const int wEnd = w - partW / 2;
-                    const int hEnd = h - partH / 2;
+            const int wEnd = w - partW / 2;
+            const int hEnd = h - partH / 2;
 
-                    const size_t partsSize = static_cast<size_t>(dimensions.x() * dimensions.y());
+            const size_t partsSize = static_cast<size_t>(dimensions.x() * dimensions.y());
 
-                    std::vector<std::future<QByteArray>> partsFutures;
-                    BoardImages imgParts;
-                    partsFutures.reserve(partsSize);
-                    imgParts.reserve(partsSize);
+            std::vector<std::future<QByteArray>> partsFutures;
+            BoardImages imgParts;
+            partsFutures.reserve(partsSize);
+            imgParts.reserve(partsSize);
 
-                    for (int yi = 0; yi < hEnd; yi += partH) {
-                        for (int xi = 0; xi < wEnd; xi += partW) {
-                            partsFutures.emplace_back(
-                            partitionImages(fullImage, QRect(xi, yi, partW, partH)));
-                        }
-                    }
+            for (int yi = 0; yi < hEnd; yi += partH) {
+                for (int xi = 0; xi < wEnd; xi += partW) {
+                    partsFutures.emplace_back(
+                        partitionImages(fullImage, QRect(xi, yi, partW, partH)));
+                }
+            }
 
-                    for (auto &&f : partsFutures) {
-                        imgParts.emplace_back(f.get());
-                    }
+            for (auto &&f : partsFutures) {
+                imgParts.emplace_back(f.get());
+            }
 
-                    return imgParts;
-                });
+            return imgParts;
+        });
 
     watcher_.setFuture(std::move(tmpFuture));
 }
@@ -78,4 +85,4 @@ std::future<QByteArray> BoardImageController::partitionImages(const QImage &img,
 }
 
 
-}
+} // namespace Dal::Image

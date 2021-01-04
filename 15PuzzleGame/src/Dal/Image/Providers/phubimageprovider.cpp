@@ -1,27 +1,34 @@
-#include "flickrimageprovider.h"
+#include "phubimageprovider.h"
 #include "main.h"
 
+#include <QJsonObject>
+#include <QJsonDocument>
 
 namespace Dal::Image {
 
 
-FlickrImageProvider::FlickrImageProvider(std::shared_ptr<Net::IDownloader> downloader)
+PHubImageProvider::PHubImageProvider(std::shared_ptr<Net::IDownloader> downloader)
     : downloader_(std::move(downloader))
 {
     if (! downloader_)
         throw std::invalid_argument("downloader mustn't be nullptr");
 }
 
-FlickrImageProvider::~FlickrImageProvider() {}
-
-QImage FlickrImageProvider::getRundomImage() const
+PHubImageProvider::~PHubImageProvider()
 {
-    QNetworkRequest request(getImgListUrl_);
+    DEBUG("~PHubImageProvider");
+}
+QImage PHubImageProvider::getRundomImage() const
+{
+    const int rndPage = getFastNotSecureRandomNum(1, 50);
+    const auto rndPageUrl = QString("%1&page=%2").arg(getImgListUrl_).arg(rndPage);
+
+    QNetworkRequest request(rndPageUrl);
     request.setMaximumRedirectsAllowed(5);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                          QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setRawHeader(QByteArray::fromBase64("QXV0aG9yaXphdGlvbg=="),
-                         QByteArray::fromBase64("Q2xpZW50LUlEIDE3OWMzZmJiY2RjOGVjNQ=="));
+                         QByteArray::fromBase64("NTYzNDkyYWQ2ZjkxNzAwMDAxMDAwMDAxNTdiNGI4NGQ5YzBhNGEwMWJmYjU1NmU0MjE5YzZhZjY="));
 
     QByteArray tmpRes;
     std::list<std::string> urls;
@@ -34,6 +41,8 @@ QImage FlickrImageProvider::getRundomImage() const
                 tmpRes = downloader_->get(request);
             }
 
+            DEBUG(QJsonDocument::fromJson(tmpRes).toJson(QJsonDocument::JsonFormat::Indented).mid(0, 2048).data());
+
             // parse response with links to different images and fill urls list
             {
                 urls.clear();
@@ -44,26 +53,28 @@ QImage FlickrImageProvider::getRundomImage() const
 
             // get random image
             {
-                tmpRes = downloader_->get(
-                    QNetworkRequest(
-                        QString::fromStdString(
-                            std::regex_replace(
-                                getRandomElement(urls), std::regex("\\\\"), ""))));
+                const auto url = QString::fromStdString(getRandomElement(urls)) + "?auto=compress&cs=tinysrgb&h=1200";
+                tmpRes = downloader_->get(QNetworkRequest(url));
             }
+            DEBUG(QString::fromStdString(urls.front()) << "s"<<urls.size()<<"simage"<<tmpRes.size()<<tmpRes.mid(0, 20))
 
-            // if we are here, we have got image correctly
+            // if we here, we have got image correctly
             break;
         } catch (const Net::NetworkError &ex) {
             DEBUG("Download error:" << ex.what() << "Attempt:" << maxDownloadAttempts - attempt);
             if (attempt < 1)
                 throw;
+        } catch (const std::exception &ex) {
+            DEBUG("Download error:" << ex.what() << "Attempt:" << maxDownloadAttempts - attempt);
+            if (attempt < 1)
+                throw Net::NetworkError(Net::NetworkError::NetErrorCode::UnknownServerError);
         }
     }
 
     return QImage::fromData(tmpRes);
 }
 
-size_t FlickrImageProvider::getFastNotSecureRandomNum(size_t min, size_t max) const
+size_t PHubImageProvider::getFastNotSecureRandomNum(size_t min, size_t max) const
 {
     using namespace std::chrono;
     unsigned now = static_cast<unsigned>(system_clock::now().time_since_epoch().count());

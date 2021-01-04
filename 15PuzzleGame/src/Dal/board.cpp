@@ -2,6 +2,7 @@
 #include "main.h"
 #include "Net/networkerror.h"
 
+#include <QPoint>
 #include <QVector>
 #include <algorithm>
 #include <random>

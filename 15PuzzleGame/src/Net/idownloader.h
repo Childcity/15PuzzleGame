@@ -1,7 +1,7 @@
-#ifndef IDOWNLOADER_H
-#define IDOWNLOADER_H
+#pragma once
 
-#include <QNetworkReply>
+#include <QNetworkRequest>
+
 
 namespace Net {
 
@@ -16,6 +16,3 @@ public:
 
 
 } // namespace Net
-
-
-#endif // IDOWNLOADER_H

@@ -1,11 +1,11 @@
-#ifndef DOWNLOADER_H
-#define DOWNLOADER_H
+#pragma once
 
 #include "Net/idownloader.h"
 
-#include <QNetworkAccessManager>
 #include <QEventLoop>
-#include <QTimer>
+
+class QNetworkAccessManager;
+class QTimer;
 
 
 namespace Net {
@@ -15,21 +15,15 @@ class Downloader : public IDownloader {
     using milliseconds = std::chrono::milliseconds;
 
 public:
-    explicit Downloader(const std::atomic_bool &isCanceled);
-
+    explicit Downloader(const std::atomic_bool &cancelationRequest);
     Downloader(const Downloader &) = delete;
-
-    ~Downloader() override;
+    ~Downloader() override = default;
 
     // IDownloader interface
 public:
     QByteArray get(const QNetworkRequest &request) override;
-
     std::chrono::milliseconds getTimeout() const override;
-
     void setTimeout(const std::chrono::milliseconds timeout) override;
-
-    //void setCancelation()
 
 private:
     static constexpr int defaultTimeout = 30000;
@@ -45,6 +39,3 @@ private:
 
 
 } // namespace Net
-
-
-#endif // DOWNLOADER_H

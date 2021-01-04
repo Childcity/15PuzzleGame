@@ -8,6 +8,7 @@ namespace Dal {
 
 
 struct TileData {
+private:
     Q_GADGET
 
     Q_PROPERTY(int Value MEMBER Value)

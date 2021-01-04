@@ -1,17 +1,13 @@
-#ifndef BOARDIMAGEPROCSSOR_H
-#define BOARDIMAGEPROCSSOR_H
+#pragma once
 
-#include "Net/downloader.h"
-#include "Dal/Image/Providers/flickrimageprovider.h"
 #include "Utils/StdFutureWatcher/src/futurewatcher.hpp"
 
 #include <QBuffer>
-#include <QPoint>
-#include <any>
+
+class QPoint;
 
 
 namespace Dal::Image {
-
 
 using namespace childcity::StdFutureWatcher;
 
@@ -41,4 +37,3 @@ private:
 
 
 } // namespace Dal::Image
-#endif // BOARDIMAGEPROCSSOR_H

@@ -3,7 +3,9 @@
 #include "networkerror.h"
 #include "operationcancelederror.h"
 
+#include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QTimer>
 #include <chrono>
 #include <memory>
 
@@ -39,9 +41,6 @@ Downloader::Downloader(const std::atomic_bool &cancelationRequest)
         });
     }
 }
-
-Downloader::~Downloader()
-{}
 
 QByteArray Downloader::get(const QNetworkRequest &request)
 {
