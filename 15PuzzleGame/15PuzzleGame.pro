@@ -23,7 +23,7 @@ include(src/Utils/StdFutureWatcher/src/StdFutureWatcher.pri)
 HEADERS += \
     src/Dal/Image/Providers/imageproviderfactory.h \
     src/Dal/Image/Providers/imageprovidertype.h \
-    src/Dal/Image/Providers/phubimageprovider.h \
+    src/Dal/Image/Providers/pixelsimageprovider.h \
 	src/Dal/Image/boardimagecontroller.h \
 	src/Dal/Image/Providers/flickrimageprovider.h \
 	src/Dal/Image/Providers/irundomimageprovider.h \
@@ -40,7 +40,7 @@ HEADERS += \
 
 SOURCES += \
     src/Dal/Image/Providers/imageproviderfactory.cpp \
-    src/Dal/Image/Providers/phubimageprovider.cpp \
+    src/Dal/Image/Providers/pixelsimageprovider.cpp \
 	src/Dal/Image/boardimagecontroller.cpp \
 	src/Dal/Image/Providers/flickrimageprovider.cpp \
 	src/Dal/Image/Providers/irundomimageprovider.cpp \

@@ -1,4 +1,4 @@
-#include "phubimageprovider.h"
+#include "PixelsImageProvider.h"
 #include "main.h"
 
 #include <QJsonObject>
@@ -7,18 +7,18 @@
 namespace Dal::Image {
 
 
-PHubImageProvider::PHubImageProvider(std::shared_ptr<Net::IDownloader> downloader)
+PixelsImageProvider::PixelsImageProvider(std::shared_ptr<Net::IDownloader> downloader)
     : downloader_(std::move(downloader))
 {
     if (! downloader_)
         throw std::invalid_argument("downloader mustn't be nullptr");
 }
 
-PHubImageProvider::~PHubImageProvider()
+PixelsImageProvider::~PixelsImageProvider()
 {
-    DEBUG("~PHubImageProvider");
+    DEBUG("~PixelsImageProvider");
 }
-QImage PHubImageProvider::getRundomImage() const
+QImage PixelsImageProvider::getRundomImage() const
 {
     const int rndPage = getFastNotSecureRandomNum(1, 50);
     const auto rndPageUrl = QString("%1&page=%2").arg(getImgListUrl_).arg(rndPage);
@@ -74,7 +74,7 @@ QImage PHubImageProvider::getRundomImage() const
     return QImage::fromData(tmpRes);
 }
 
-size_t PHubImageProvider::getFastNotSecureRandomNum(size_t min, size_t max) const
+size_t PixelsImageProvider::getFastNotSecureRandomNum(size_t min, size_t max) const
 {
     using namespace std::chrono;
     unsigned now = static_cast<unsigned>(system_clock::now().time_since_epoch().count());

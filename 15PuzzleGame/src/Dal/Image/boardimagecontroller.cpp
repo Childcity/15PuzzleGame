@@ -3,7 +3,7 @@
 
 #include "Net/downloader.h"
 #include "Dal/Image/Providers/flickrimageprovider.h"
-#include "Dal/Image/Providers/phubimageprovider.h"
+#include "Dal/Image/Providers/pixelsimageprovider.h"
 
 #include <QPoint>
 
@@ -33,7 +33,7 @@ void BoardImageController::getBoardImagesAsync(const QPoint &dimensions)
             const auto downloader = std::make_shared<Net::Downloader>(cancelationRequest);
             downloader->setTimeout(5s);
 
-            const auto imgProvider = std::make_unique<PHubImageProvider>(downloader);
+            const auto imgProvider = std::make_unique<PixelsImageProvider>(downloader);
 
             const QImage fullImage(imgProvider->getRundomImage());
 

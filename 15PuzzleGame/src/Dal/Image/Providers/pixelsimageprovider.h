@@ -12,11 +12,11 @@
 namespace Dal::Image {
 
 
-class PHubImageProvider : public IRundomImageProvider {
+class PixelsImageProvider : public IRundomImageProvider {
 public:
-    explicit PHubImageProvider(std::shared_ptr<Net::IDownloader> downloader);
+    explicit PixelsImageProvider(std::shared_ptr<Net::IDownloader> downloader);
 
-    ~PHubImageProvider() override;
+    ~PixelsImageProvider() override;
 
     // IRundomImageProvider interface
 public:
