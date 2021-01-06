@@ -7,9 +7,11 @@
 
 #include <QByteArray>
 
+
 namespace Dal::Image {
 
 
+[[maybe_unused]] static inline
 size_t getFastNotSecureRandomNum(size_t min, size_t max)
 {
     using namespace std::chrono;
@@ -36,6 +38,7 @@ const T &getRandomElement(const std::list<T> &urls)
     return *it;
 }
 
+[[maybe_unused]] static inline
 std::list<std::string> findAllMatches(QByteArray text, const std::regex reg)
 {
     std::list<std::string> foundList;
@@ -47,4 +50,5 @@ std::list<std::string> findAllMatches(QByteArray text, const std::regex reg)
     return foundList;
 }
 
-}
+
+} // namespace Dal::Image

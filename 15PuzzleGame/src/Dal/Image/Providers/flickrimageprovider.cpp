@@ -1,18 +1,23 @@
 #include "flickrimageprovider.h"
+#include "Net/networkerror.h"
+
+#include "../utils.hpp"
 #include "main.h"
 
 
 namespace Dal::Image {
 
 
-FlickrImageProvider::FlickrImageProvider(std::shared_ptr<Net::IDownloader> downloader)
+FlickrImageProvider::FlickrImageProvider(std::shared_ptr<Net::IDownloader> downloader) noexcept
     : downloader_(std::move(downloader))
 {
-    if (! downloader_)
-        throw std::invalid_argument("downloader mustn't be nullptr");
+    Q_ASSERT_X(downloader_, __func__, "downloader mustn't be nullptr");
 }
 
-FlickrImageProvider::~FlickrImageProvider() {}
+FlickrImageProvider::~FlickrImageProvider()
+{
+    DEBUG("~FlickrImageProvider");
+}
 
 QImage FlickrImageProvider::getRundomImage() const
 {
@@ -24,32 +29,18 @@ QImage FlickrImageProvider::getRundomImage() const
                          QByteArray::fromBase64("Q2xpZW50LUlEIDE3OWMzZmJiY2RjOGVjNQ=="));
 
     QByteArray tmpRes;
-    std::list<std::string> urls;
 
     int attempt = maxDownloadAttempts;
     while (attempt--) {
         try {
-            // get json array with links to images
-            {
-                tmpRes = downloader_->get(request);
-            }
 
-            // parse response with links to different images and fill urls list
-            {
-                urls.clear();
-                auto matchesBegin = std::regex_token_iterator(tmpRes.cbegin(), tmpRes.cend(), imgUrlTemplate);
-                auto matchesEnd = std::regex_token_iterator<QByteArray::const_iterator>();
-                std::move(matchesBegin, matchesEnd, std::back_inserter(urls));
-            }
+            tmpRes = downloader_->get(request);
+
+            const auto urls = findAllMatches(tmpRes, imgUrlTemplate);
 
             // get random image
-            {
-                tmpRes = downloader_->get(
-                    QNetworkRequest(
-                        QString::fromStdString(
-                            std::regex_replace(
-                                getRandomElement(urls), std::regex("\\\\"), ""))));
-            }
+            const auto url = std::regex_replace(getRandomElement(urls), std::regex("\\\\"), "");
+            tmpRes = downloader_->get(QNetworkRequest(QString::fromStdString(url)));
 
             // if we are here, we have got image correctly
             break;
@@ -57,19 +48,14 @@ QImage FlickrImageProvider::getRundomImage() const
             DEBUG("Download error:" << ex.what() << "Attempt:" << maxDownloadAttempts - attempt);
             if (attempt < 1)
                 throw;
+        } catch (const std::exception &ex) {
+            DEBUG("Download error:" << ex.what() << "Attempt:" << maxDownloadAttempts - attempt);
+            if (attempt < 1)
+                throw Net::NetworkError(Net::NetworkError::NetErrorCode::UnknownServerError);
         }
     }
 
     return QImage::fromData(tmpRes);
-}
-
-size_t FlickrImageProvider::getFastNotSecureRandomNum(size_t min, size_t max) const
-{
-    using namespace std::chrono;
-    unsigned now = static_cast<unsigned>(system_clock::now().time_since_epoch().count());
-    ::srand(now);
-    size_t rnd = static_cast<size_t>(::rand());
-    return min + rnd % (max - min + 1);
 }
 
 

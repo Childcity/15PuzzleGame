@@ -22,7 +22,7 @@ class Board : public QObject {
     };
 
 public:
-    Board(int dimension, QObject *parent = nullptr);
+    Board(int dimension, QObject *parent = nullptr) noexcept;
 
     ~Board() override;
 

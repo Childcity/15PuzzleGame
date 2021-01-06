@@ -4,7 +4,6 @@
 #include "Net/idownloader.h"
 
 #include <QImage>
-#include <memory>
 #include <regex>
 
 
@@ -13,7 +12,7 @@ namespace Dal::Image {
 
 class PixelsImageProvider : public IRundomImageProvider {
 public:
-    explicit PixelsImageProvider(std::shared_ptr<Net::IDownloader> downloader);
+    explicit PixelsImageProvider(std::shared_ptr<Net::IDownloader> downloader) noexcept;
     ~PixelsImageProvider() override;
 
     // IRundomImageProvider interface
@@ -21,7 +20,7 @@ public:
     QImage getRundomImage() const override;
 
 private:
-    static constexpr int maxDownloadAttempts = 5;
+    static constexpr int maxDownloadAttempts = 3;
 
     const std::shared_ptr<Net::IDownloader> downloader_;
     const QString getImgListUrl_ { "https://api.pexels.com/v1/search?query=sexy&size=medium&per_page=80" };

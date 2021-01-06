@@ -11,7 +11,7 @@
 namespace Dal {
 
 
-Board::Board(int dimension, QObject *parent)
+Board::Board(int dimension, QObject *parent) noexcept
     : QObject(parent)
     , dimension_(dimension)
     , boardElements_(dimension * dimension)

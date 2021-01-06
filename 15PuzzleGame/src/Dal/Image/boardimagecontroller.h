@@ -11,18 +11,16 @@ namespace Dal::Image {
 
 using namespace childcity::StdFutureWatcher;
 
-class BoardImageController : public QObject {
+class BoardImageController final: public QObject {
     Q_OBJECT
 
     using BoardImages = std::vector<QByteArray>;
 
 public:
-    BoardImageController(QObject *parent = nullptr);
-
+    BoardImageController(QObject *parent = nullptr) noexcept;
     ~BoardImageController();
 
     void getBoardImagesAsync(const QPoint &dimensions);
-
     BoardImages getBoardImagesAcyncResult();
 
 signals:

@@ -11,7 +11,7 @@
 namespace Dal::Image {
 
 
-BoardImageController::BoardImageController(QObject *parent)
+BoardImageController::BoardImageController(QObject *parent) noexcept
     : QObject(parent)
 {
     connect(&watcher_, &FutureWatcher<BoardImages>::sigResultReady,
@@ -33,9 +33,9 @@ void BoardImageController::getBoardImagesAsync(const QPoint &dimensions)
             const auto downloader = std::make_shared<Net::Downloader>(cancelationRequest);
             downloader->setTimeout(5s);
 
-            const auto imgProvider = std::make_unique<PixelsImageProvider>(downloader);
+            const auto imgProvider = std::make_unique<FlickrImageProvider>(downloader);
 
-            const QImage fullImage(imgProvider->getRundomImage());
+            const QImage fullImage = imgProvider->getRundomImage();
 
             const int w = fullImage.width();
             const int h = fullImage.height();
