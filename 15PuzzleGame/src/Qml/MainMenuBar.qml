@@ -14,6 +14,9 @@ ToolBar {
     readonly property int menuWidth: 200
     readonly property int menuPading: 5
 
+    readonly property int dimension: AppSettings.dimension
+    readonly property int imageProvider: AppSettings.imageProvider
+
     property var enterAnimation: Transition {
         PropertyAnimation {
             property: "opacity";
@@ -74,15 +77,13 @@ ToolBar {
                 RadioButton {
                     text: qsTr("Nature (imgur.com)")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
-                    checked: {
-                        console.log(AppSettings.imageProvider, ImageProviderType.Imgur)
-                        AppSettings.imageProvider === ImageProviderType.Imgur}
+                    checked: root.imageProvider === ImageProviderType.Imgur
                     onToggled: AppSettings.imageProvider = ImageProviderType.Imgur
                 }
                 RadioButton {
                     text: qsTr("Erotic (pixels.com)")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
-                    checked: AppSettings.imageProvider === ImageProviderType.Pixels
+                    checked: root.imageProvider === ImageProviderType.Pixels
                     onToggled: AppSettings.imageProvider = ImageProviderType.Pixels
                 }
             }
@@ -104,7 +105,7 @@ ToolBar {
                     delegate: RadioButton {
                         text: qsTr((index+2) + "x" + (index+2))
                         Layout.preferredHeight: menuItemHeight
-                        checked: (index+2) === AppSettings.dimension ? true : false
+                        checked: (index+2) === root.dimension ? true : false
                         onToggled: AppSettings.dimension = (index+2)
                     }
                 }

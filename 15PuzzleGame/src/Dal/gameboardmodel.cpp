@@ -15,14 +15,11 @@ GameBoardModel::GameBoardModel(QObject *parent)
 
 int GameBoardModel::rowCount(const QModelIndex &) const
 {
-    assert(board_);
     return board_->tilesNumber();
 }
 
 QVariant GameBoardModel::data(const QModelIndex &index, int role) const
 {
-    assert(board_);
-
     if (index.isValid()) {
         const TileData &tile = (*board_)[index.row()];
         switch (role) {
@@ -37,7 +34,6 @@ QVariant GameBoardModel::data(const QModelIndex &index, int role) const
 
 int GameBoardModel::dimension() const
 {
-    assert(board_);
     return board_->dimension();
 }
 
