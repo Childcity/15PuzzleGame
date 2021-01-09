@@ -56,7 +56,7 @@ void AppSettings::setDimension(int dimension)
 
 AppSettings::ImageProviderType AppSettings::imageProvider()
 {
-    static const auto defaultType = ImageProviderType::Flickr;
+    static const auto defaultType = ImageProviderType::Imgur;
 
     auto type = ImageProviderTypeClass::fromVariant(
         settings_.value(Cnst::imageProvider, defaultType));

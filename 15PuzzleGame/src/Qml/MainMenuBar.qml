@@ -26,13 +26,13 @@ ToolBar {
         ToolButton {
             Layout.preferredHeight: root.height
             text: qsTr("File")
-            onClicked: fileMenu.popup(root.parent, x, 0)
+            onClicked: fileMenu.popup(root.parent, x + root.leftPadding, 0)
         }
         ToolButton {
             id: editTool
             Layout.preferredHeight: root.height
             text: qsTr("Edit")
-            onClicked: editMenu.popup(root.parent, x, 0)
+            onClicked: editMenu.popup(root.parent, x + root.leftPadding, 0)
         }
         Item {
             Layout.fillHeight: true
@@ -74,13 +74,15 @@ ToolBar {
                 RadioButton {
                     text: qsTr("Nature (imgur.com)")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
-                    checked: AppSettings.imageProvider == ImageProviderType.Flickr
-                    onToggled: AppSettings.imageProvider = ImageProviderType.Flickr
+                    checked: {
+                        console.log(AppSettings.imageProvider, ImageProviderType.Imgur)
+                        AppSettings.imageProvider === ImageProviderType.Imgur}
+                    onToggled: AppSettings.imageProvider = ImageProviderType.Imgur
                 }
                 RadioButton {
                     text: qsTr("Erotic (pixels.com)")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
-                    checked: AppSettings.imageProvider == ImageProviderType.Pixels
+                    checked: AppSettings.imageProvider === ImageProviderType.Pixels
                     onToggled: AppSettings.imageProvider = ImageProviderType.Pixels
                 }
             }

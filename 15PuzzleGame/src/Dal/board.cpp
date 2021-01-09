@@ -133,7 +133,7 @@ bool Board::isValid() const
            boardElements_.size() > 0;
 }
 
-TileData Board::operator[](int index)
+TileData &Board::operator[](int index)
 {
     return boardElements_[index];
 }

@@ -24,7 +24,7 @@ HEADERS += \
     src/Dal/Image/Providers/imageprovidertype.h \
     src/Dal/Image/Providers/pixelsimageprovider.h \
 	src/Dal/Image/boardimagecontroller.h \
-	src/Dal/Image/Providers/flickrimageprovider.h \
+    src/Dal/Image/Providers/imgurimageprovider.h \
     src/Dal/Image/Providers/irundomimageprovider.h \
     src/Dal/Image/utils.hpp \
     src/Net/networkerror.h \
@@ -42,7 +42,7 @@ SOURCES += \
     src/Dal/Image/Providers/imageproviderfactory.cpp \
     src/Dal/Image/Providers/pixelsimageprovider.cpp \
 	src/Dal/Image/boardimagecontroller.cpp \
-	src/Dal/Image/Providers/flickrimageprovider.cpp \
+    src/Dal/Image/Providers/imgurimageprovider.cpp \
 	src/Dal/Image/Providers/irundomimageprovider.cpp \
     src/Net/networkerror.cpp \
     src/appsettings.cpp \

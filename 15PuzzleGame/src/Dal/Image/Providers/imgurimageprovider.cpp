@@ -1,4 +1,4 @@
-#include "flickrimageprovider.h"
+#include "imgurimageprovider.h"
 #include "Net/networkerror.h"
 
 #include "../utils.hpp"
@@ -8,18 +8,18 @@
 namespace Dal::Image {
 
 
-FlickrImageProvider::FlickrImageProvider(std::shared_ptr<Net::IDownloader> downloader) noexcept
+ImgurImageProvider::ImgurImageProvider(std::shared_ptr<Net::IDownloader> downloader) noexcept
     : downloader_(std::move(downloader))
 {
     Q_ASSERT_X(downloader_, __func__, "downloader mustn't be nullptr");
 }
 
-FlickrImageProvider::~FlickrImageProvider()
+ImgurImageProvider::~ImgurImageProvider()
 {
-    DEBUG("~FlickrImageProvider");
+    DEBUG("~ImgurImageProvider");
 }
 
-QImage FlickrImageProvider::getRundomImage() const
+QImage ImgurImageProvider::getRundomImage() const
 {
     QNetworkRequest request(getImgListUrl_);
     request.setMaximumRedirectsAllowed(5);

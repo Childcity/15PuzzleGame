@@ -34,8 +34,8 @@ GridView {
         Tile {
             anchors.fill: backgroundDelegate
             anchors.margins: 3
-            tileText: model.display.Value
-            tileImg: model.display.Image
+            tileText: model.display
+            tileImg: model.decoration
 
             MouseArea {
                 anchors.fill: parent

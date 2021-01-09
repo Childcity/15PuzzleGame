@@ -15,7 +15,7 @@ public:
     enum Value
     {
         Invalid,
-        Flickr,
+        Imgur,
         Pixels
     };
     Q_ENUM(Value)
@@ -27,7 +27,7 @@ public:
 
     static bool isValid(Value type)
     {
-        return type == Value::Flickr ||
+        return type == Value::Imgur ||
                type == Value::Pixels;
     }
 };

@@ -24,9 +24,12 @@ QVariant GameBoardModel::data(const QModelIndex &index, int role) const
     assert(board_);
 
     if (index.isValid()) {
-        if (role == Qt::DisplayRole) {
-            return QVariant::fromValue((*board_)[index.row()]);
+        const TileData &tile = (*board_)[index.row()];
+        switch (role) {
+            case Qt::DisplayRole: return tile.Value;
+            case Qt::DecorationRole: return tile.Image;
         }
+        assert(false);
     }
 
     return {};

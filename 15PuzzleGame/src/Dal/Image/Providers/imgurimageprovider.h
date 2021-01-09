@@ -10,10 +10,10 @@
 namespace Dal::Image {
 
 
-class FlickrImageProvider : public IRundomImageProvider {
+class ImgurImageProvider : public IRundomImageProvider {
 public:
-    explicit FlickrImageProvider(std::shared_ptr<Net::IDownloader> downloader) noexcept;
-    ~FlickrImageProvider() override;
+    explicit ImgurImageProvider(std::shared_ptr<Net::IDownloader> downloader) noexcept;
+    ~ImgurImageProvider() override;
 
     // IRundomImageProvider interface
 public:

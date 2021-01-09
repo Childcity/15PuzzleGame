@@ -39,7 +39,7 @@ const T &getRandomElement(const std::list<T> &urls)
 }
 
 [[maybe_unused]] static inline
-std::list<std::string> findAllMatches(QByteArray text, const std::regex reg)
+std::list<std::string> findAllMatches(const QByteArray &text, const std::regex reg)
 {
     std::list<std::string> foundList;
 

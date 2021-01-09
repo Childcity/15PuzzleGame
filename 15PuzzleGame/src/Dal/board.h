@@ -41,7 +41,7 @@ public:
     bool isGameWon() const;
     bool isValid() const;
 
-    TileData operator[](int index);
+    TileData &operator[](int index);
 
 signals:
     void sigImagesCached();
