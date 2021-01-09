@@ -1,7 +1,5 @@
-#ifndef IMAGEPROVIDERTYPE_H
-#define IMAGEPROVIDERTYPE_H
+#pragma once
 
-#include <QObject>
 #include <QVariant>
 
 
@@ -16,8 +14,9 @@ public:
 
     enum Value
     {
+        Invalid,
         Flickr,
-        Phub
+        Pixels
     };
     Q_ENUM(Value)
 
@@ -29,7 +28,7 @@ public:
     static bool isValid(Value type)
     {
         return type == Value::Flickr ||
-               type == Value::Phub;
+               type == Value::Pixels;
     }
 };
 
@@ -37,5 +36,3 @@ using ImageProviderType = ImageProviderTypeClass::Value;
 
 
 } // namespace Dal::Image
-
-#endif // IMAGEPROVIDERTYPE_H

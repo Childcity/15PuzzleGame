@@ -1,5 +1,4 @@
-#ifndef OPERATIONCANCELEDERROR_H
-#define OPERATIONCANCELEDERROR_H
+#pragma once
 
 #include <stdexcept>
 
@@ -14,5 +13,3 @@ public:
 
 
 } // namespace Net
-
-#endif // OPERATIONCANCELEDERROR_H

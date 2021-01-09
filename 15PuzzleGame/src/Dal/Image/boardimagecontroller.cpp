@@ -2,10 +2,11 @@
 #include "main.h"
 
 #include "Net/downloader.h"
-#include "Dal/Image/Providers/flickrimageprovider.h"
-#include "Dal/Image/Providers/pixelsimageprovider.h"
+#include "Providers/imageproviderfactory.h"
 
-#include <QPoint>
+#include <QSize>
+#include <QBuffer>
+#include <QImage>
 
 
 namespace Dal::Image {
@@ -23,29 +24,29 @@ BoardImageController::~BoardImageController()
     DEBUG("~BoardImageController");
 }
 
-void BoardImageController::getBoardImagesAsync(const QPoint &dimensions)
+void BoardImageController::getBoardImagesAsync(const QSize &dimensions, ImageProviderType providerType)
 {
     auto tmpFuture = std::async(
-        std::launch::async, [dimensions]() -> BoardImages {
+        std::launch::async, [dimensions, providerType]() -> BoardImages {
             using namespace std::chrono_literals;
 
             std::atomic_bool cancelationRequest = false;
             const auto downloader = std::make_shared<Net::Downloader>(cancelationRequest);
             downloader->setTimeout(5s);
 
-            const auto imgProvider = std::make_unique<FlickrImageProvider>(downloader);
+            const auto imgProvider = ImageProviderFactory::GetImageProvider(providerType, downloader);
 
             const QImage fullImage = imgProvider->getRundomImage();
 
             const int w = fullImage.width();
             const int h = fullImage.height();
-            const int partW = w / dimensions.x();
-            const int partH = h / dimensions.y();
+            const int partW = w / dimensions.width();
+            const int partH = h / dimensions.height();
 
             const int wEnd = w - partW / 2;
             const int hEnd = h - partH / 2;
 
-            const size_t partsSize = static_cast<size_t>(dimensions.x() * dimensions.y());
+            const size_t partsSize = static_cast<size_t>(dimensions.width() * dimensions.height());
 
             std::vector<std::future<QByteArray>> partsFutures;
             BoardImages imgParts;

@@ -1,7 +1,7 @@
-#ifndef BOARD_H
-#define BOARD_H
+#pragma once
 
 #include "Dal/Image/boardimagecontroller.h"
+#include "Dal/Image/Providers/imageprovidertype.h"
 #include "tiledata.h"
 
 
@@ -22,53 +22,49 @@ class Board : public QObject {
     };
 
 public:
-    Board(int dimension, QObject *parent = nullptr) noexcept;
-
+    Board(QObject *parent = nullptr) noexcept;
+    Board(int dimension, Image::ImageProviderType imageProviderType, QObject *parent = nullptr) noexcept;
     ~Board() override;
 
+    void reset();
     void move(int index);
-
     int tilesNumber() const;
-
     int dimension() const;
+    Image::ImageProviderType imageProviderType() const;
 
     int hiddenValue() const;
-
     int hiddenIndex() const;
 
     bool isMovable(Position pos, Position hidPos) const;
-
     bool isMovable(int index) const;
 
     bool isGameWon() const;
+    bool isValid() const;
 
     TileData operator[](int index);
 
 signals:
     void sigImagesCached();
-
     void sigCachingError(QString errorString);
+
+private slots:
+    void slotImageReady();
 
 private:
     Position getRowCol(int index) const;
-
     int getIndex(Position pos) const;
-
     void shaffleBoard();
-
     bool isBoardSolvable() const;
-
     int findHiddenIndex() const;
 
-    void shift2D(QVector<TileData> &vec, Position strtPos, int count, ShiftDirection direction);
+    void shift2D(const Position strtPos, int count, ShiftDirection direction);
 
 private:
     int dimension_;
-    QVector<TileData> boardElements_;
-    Image::BoardImageController imgController_;
+    Image::ImageProviderType imageProviderType_;
+    std::vector<TileData> boardElements_;
+    std::unique_ptr<Image::BoardImageController> imgController_;
 };
 
 
 } // namespace Dal
-
-#endif // BOARD_H

@@ -1,5 +1,4 @@
-#ifndef IRundomIMAGEPROVIDER_H
-#define IRundomIMAGEPROVIDER_H
+#pragma once
 
 class QImage;
 
@@ -14,6 +13,3 @@ public:
 
 
 } // namespace Dal::Image
-
-
-#endif // IRundomIMAGEPROVIDER_H

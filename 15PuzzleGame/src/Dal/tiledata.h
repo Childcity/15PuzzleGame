@@ -1,5 +1,4 @@
-#ifndef TILEDATA_H
-#define TILEDATA_H
+#pragma once
 
 #include <memory>
 #include <QDebug>
@@ -50,6 +49,3 @@ public:
 } // namespace Dal
 
 Q_DECLARE_METATYPE(Dal::TileData);
-
-
-#endif // TILEDATA_H

@@ -1,16 +1,11 @@
-#ifndef APPSETTINGS_H
-#define APPSETTINGS_H
+#pragma once
 
-#include "main.h"
-#include <Dal/Image/Providers/imageprovidertype.h>
+#include "Dal/Image/Providers/imageprovidertype.h"
 
 #include <QSettings>
-#include <QGuiApplication>
-#include <QQmlEngine>
-#include <mutex>
 
-using Dal::Image::ImageProviderType;
-
+class QQmlEngine;
+class QJSEngine;
 
 class AppSettings : public QObject {
     Q_OBJECT
@@ -18,36 +13,27 @@ class AppSettings : public QObject {
     Q_PROPERTY(int dimension READ dimension WRITE setDimension NOTIFY sigDimensionChanged)
     Q_PROPERTY(ImageProviderType imageProvider READ imageProvider WRITE setImageProvider NOTIFY sigImageProviderChanged)
 
-    explicit AppSettings(QObject *parent = nullptr);
+    explicit AppSettings(QObject *parent = nullptr) noexcept;
 
 public:
-    static AppSettings &Get();
+    using ImageProviderType = Dal::Image::ImageProviderType;
 
+    static AppSettings &Get();
     static QObject *Get(QQmlEngine *, QJSEngine *);
 
-public:
     int dimension() const;
+    void setDimension(int dimension);
+    ImageProviderType imageProvider();
+    void setImageProvider(ImageProviderType imageProvider);
 
-    ImageProviderType imageProvider() const;
+public slots:
+    bool isValid() const;
+    QString status() const;
 
 signals:
     void sigDimensionChanged(int dimension);
-
     void sigImageProviderChanged(ImageProviderType imageProvider);
-
-    void sigSettingsError(QString errorString) const;
-
-public slots:
-    void setDimension(int dimension);
-
-    void setImageProvider(ImageProviderType imageProvider);
-
-    bool isValid() const;
-
-    QString status() const;
 
 private:
     QSettings settings_;
 };
-
-#endif // APPSETTINGS_H

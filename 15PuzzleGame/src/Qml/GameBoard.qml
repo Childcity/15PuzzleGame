@@ -6,18 +6,19 @@ import AppSettings 1.0
 GridView {
 	id: root
     interactive: false
-    cellWidth: root.width / root.model.dimension
-    cellHeight: root.height / root.model.dimension
-    //highlight: Rectangle { color: "lightsteelblue"; radius: 10 }
-
+    cellWidth: root.width / boardModel.dimension
+    cellHeight: root.height / boardModel.dimension
 
     model: GameBoardModel {
+        id: boardModel
         dimension: AppSettings.dimension
-        //imageProvider: AppSettings.imageProvider
+        imageProvider: AppSettings.imageProvider
         onSigGameBoardError: {
             // arg1: errorString
             if (errorString === "TimeoutError") {
                 errorPopup.errMsg = "Can't download image: " + errorString;
+            } else if (errorString.length > 0) {
+                errorPopup.errMsg = errorString
             }
 
             errorPopup.visible = true;
@@ -28,7 +29,7 @@ GridView {
         id: backgroundDelegate
         width: root.cellWidth
         height: root.cellHeight
-        visible: index !== root.model.hiddenIndex
+        visible: index !== boardModel.hiddenIndex
 
         Tile {
             anchors.fill: backgroundDelegate
@@ -39,7 +40,7 @@ GridView {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    root.model.move(index)
+                    boardModel.move(index)
                 }
             }
 
@@ -50,10 +51,10 @@ GridView {
         id: wonPopup
         width: root.width - root.width / 8
         height: root.height - root.height / 2
-        visible: root.model.isGameWon
+        visible: boardModel.isGameWon
 
         onAboutToHide: {
-            root.model.resetBoard()
+            boardModel.resetBoard()
         }
     }
 
@@ -64,7 +65,7 @@ GridView {
         visible: false
 
         onAboutToHide: {
-            root.model.resetBoard()
+            boardModel.resetBoard()
         }
     }
 

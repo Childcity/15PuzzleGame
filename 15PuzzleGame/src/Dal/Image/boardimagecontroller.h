@@ -1,10 +1,9 @@
 #pragma once
 
+#include "Providers/imageprovidertype.h"
 #include "Utils/StdFutureWatcher/src/futurewatcher.hpp"
 
-#include <QBuffer>
-
-class QPoint;
+class QSize;
 
 
 namespace Dal::Image {
@@ -20,7 +19,7 @@ public:
     BoardImageController(QObject *parent = nullptr) noexcept;
     ~BoardImageController();
 
-    void getBoardImagesAsync(const QPoint &dimensions);
+    void getBoardImagesAsync(const QSize &dimensions, ImageProviderType providerType);
     BoardImages getBoardImagesAcyncResult();
 
 signals:

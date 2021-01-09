@@ -1,5 +1,4 @@
-#ifndef NETWORKERROR_H
-#define NETWORKERROR_H
+#pragma once
 
 #include <QNetworkReply>
 #include <stdexcept>
@@ -19,5 +18,3 @@ public:
 
 
 } // namespace Net
-
-#endif // NETWORKERROR_H

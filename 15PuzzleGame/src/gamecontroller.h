@@ -1,5 +1,4 @@
-#ifndef GAMECNTROLLER_H
-#define GAMECNTROLLER_H
+#pragma once
 
 #include "main.h"
 
@@ -19,6 +18,3 @@ public slots:
 private:
 
 };
-
-
-#endif // GAMECNTROLLER_H

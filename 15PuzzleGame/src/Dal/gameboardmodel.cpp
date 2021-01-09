@@ -1,21 +1,30 @@
 #include "gameboardmodel.h"
 
+#include <algorithm>
+#include <random>
 
-Dal::GameBoardModel::GameBoardModel(QObject *parent)
+
+namespace Dal {
+
+
+GameBoardModel::GameBoardModel(QObject *parent)
     : QAbstractListModel(parent)
-{}
+{
+    board_ = qt_make_unique<Board>();
+}
 
-int Dal::GameBoardModel::rowCount(const QModelIndex &) const
+int GameBoardModel::rowCount(const QModelIndex &) const
 {
     assert(board_);
     return board_->tilesNumber();
 }
 
-QVariant Dal::GameBoardModel::data(const QModelIndex &index, int role) const
+QVariant GameBoardModel::data(const QModelIndex &index, int role) const
 {
+    assert(board_);
+
     if (index.isValid()) {
         if (role == Qt::DisplayRole) {
-            assert(board_);
             return QVariant::fromValue((*board_)[index.row()]);
         }
     }
@@ -23,44 +32,48 @@ QVariant Dal::GameBoardModel::data(const QModelIndex &index, int role) const
     return {};
 }
 
-int Dal::GameBoardModel::dimension() const
+int GameBoardModel::dimension() const
 {
     assert(board_);
     return board_->dimension();
 }
 
-int Dal::GameBoardModel::hiddenIndex() const
+void GameBoardModel::setDimension(int dimension)
 {
-    assert(board_);
-    return board_->hiddenIndex();
-}
-
-bool Dal::GameBoardModel::isGameWon() const
-{
-    if (! board_)
-        return false;
-
-    return board_->isGameWon();
-}
-
-void Dal::GameBoardModel::resetBoard()
-{
-    setDimension(dimension());
-}
-
-void Dal::GameBoardModel::setDimension(int dimension)
-{
-    beginResetModel();
-    {
-        createBoard(dimension);
-    }
-    endResetModel();
-
-    emit sigDimensionChanged();
+    createBoard(dimension, imageProvider());
+    emit sigDimensionChanged(dimension);
     emit sigGameWonChanged(false);
 }
 
-void Dal::GameBoardModel::move(int index)
+int GameBoardModel::hiddenIndex() const
+{
+    return board_->hiddenIndex();
+}
+
+bool GameBoardModel::isGameWon() const
+{
+    return board_->isGameWon();
+}
+
+Image::ImageProviderType GameBoardModel::imageProvider() const
+{
+    return board_->imageProviderType();
+}
+
+void GameBoardModel::setImageProvider(ImageProviderType imageProvider)
+{
+    createBoard(dimension(), imageProvider);
+    emit sigImageProviderChanged(imageProvider);
+    emit sigGameWonChanged(false);
+}
+
+void GameBoardModel::resetBoard()
+{
+    createBoard(dimension(), imageProvider());
+    emit sigGameWonChanged(false);
+}
+
+void GameBoardModel::move(int index)
 {
     assert(board_);
     if (! board_->isMovable(index))
@@ -79,12 +92,21 @@ void Dal::GameBoardModel::move(int index)
     }
 }
 
-void Dal::GameBoardModel::createBoard(int dimension)
+void GameBoardModel::createBoard(int dimension, ImageProviderType imageProvider)
 {
-    board_ = qt_make_unique<Board>(dimension, this);
+    beginResetModel();
+
+    board_ = qt_make_unique<Board>(dimension, imageProvider, this);
     connect(&*board_, &Board::sigCachingError, this, &GameBoardModel::sigGameBoardError);
     connect(&*board_, &Board::sigImagesCached, this, [this] {
+        // For stopping empty image animation and reloading new images
+        // we must notify qml about changes
         beginResetModel();
         endResetModel();
     });
+
+    endResetModel();
 }
+
+
+} // namespace Dal

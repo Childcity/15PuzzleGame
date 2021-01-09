@@ -66,22 +66,22 @@ ToolBar {
             implicitWidth: providerColLay.implicitWidth + 2 * menuPading
             implicitHeight: contentItem.implicitHeight + 2 * menuPading
             enter: enterAnimation
-            title: qsTr("Image provider");
+            title: qsTr("Image Thematic");
 
             ColumnLayout {
                 id: providerColLay
                 spacing: 2
                 RadioButton {
-                    text: qsTr("www.flickr.com")
+                    text: qsTr("Nature (imgur.com)")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
                     checked: AppSettings.imageProvider == ImageProviderType.Flickr
                     onToggled: AppSettings.imageProvider = ImageProviderType.Flickr
                 }
                 RadioButton {
-                    text: qsTr("www.p***hub.com")
+                    text: qsTr("Erotic (pixels.com)")
                     Layout.preferredHeight: menuItemHeight /*+ 2 * imgProvider.padding*/
-                    checked: AppSettings.imageProvider == ImageProviderType.Phub
-                    onToggled: AppSettings.imageProvider = ImageProviderType.Phub
+                    checked: AppSettings.imageProvider == ImageProviderType.Pixels
+                    onToggled: AppSettings.imageProvider = ImageProviderType.Pixels
                 }
             }
         }
@@ -92,7 +92,7 @@ ToolBar {
             implicitWidth: dimensionColLay.implicitWidth + 2 * menuPading
             implicitHeight: contentItem.implicitHeight + 2 * menuPading
             enter: enterAnimation
-            title: qsTr("Board dimension");
+            title: qsTr("Board Dimension");
 
             ColumnLayout {
                 id: dimensionColLay

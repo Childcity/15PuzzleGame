@@ -1,29 +1,20 @@
-#ifndef IMAGEPROVIDERFACTORY_H
-#define IMAGEPROVIDERFACTORY_H
+#pragma once
 
 #include "imageprovidertype.h"
+#include "Net/idownloader.h"
 #include "irundomimageprovider.h"
-#include "flickrimageprovider.h"
+
+#include <memory>
 
 
 namespace Dal::Image {
 
 
-class ImageProviderFactory {
-public:
+struct ImageProviderFactory {
     ImageProviderFactory() = delete;
-
-    IRundomImageProvider *CreateImageProvider(ImageProviderType type, std::shared_ptr<Net::IDownloader> downloader)
-    {
-        if (type == ImageProviderType::Flickr) {
-            return new FlickrImageProvider(downloader);
-        } else {
-            assert(false);
-        }
-    }
+    static std::unique_ptr<IRundomImageProvider> GetImageProvider(ImageProviderType type,
+                                                                  std::shared_ptr<Net::IDownloader> downloader);
 };
 
 
 } // namespace Dal::Image
-
-#endif // IMAGEPROVIDERFACTORY_H

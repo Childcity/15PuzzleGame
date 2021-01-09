@@ -1,4 +1,4 @@
-#include <Dal/Image/Providers/imageprovidertype.h>
+#include "Dal/Image/Providers/imageprovidertype.h"
 #include "Dal/gameboardmodel.h"
 #include "gamecontroller.h"
 #include "appsettings.h"

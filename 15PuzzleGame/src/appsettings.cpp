@@ -1,24 +1,36 @@
 #include "appsettings.h"
+#include "main.h"
 
-using Dal::Image::ImageProviderTypeClass;
+#include <QGuiApplication>
+#include <QMetaEnum>
+#include <mutex>
 
-AppSettings::AppSettings(QObject *parent)
+using ImageProviderTypeClass = Dal::Image::ImageProviderTypeClass;
+
+namespace Cnst {
+
+using LL = QLatin1Literal;
+const auto dimension = LL("dimension");
+const auto imageProvider = LL("imageProvider");
+
+}
+
+AppSettings::AppSettings(QObject *parent) noexcept
     : QObject(parent)
     , settings_(QCoreApplication::applicationDirPath() +
                     "/" + QGuiApplication::applicationName() +
-                    ".ini",
-                QSettings::Format::IniFormat)
+                    ".ini", QSettings::Format::IniFormat)
 {}
 
 AppSettings &AppSettings::Get()
 {
     static AppSettings *pthis;
-    static std::mutex m;
+    static std::once_flag flag;
 
-    std::lock_guard lock(m);
-
-    if (pthis == nullptr) // avoid creation of new instances
+    std::call_once(flag, []{
+        // QQmlEngine will automaticaly delete AppSettings!
         pthis = new AppSettings;
+    });
 
     return *pthis;
 }
@@ -30,20 +42,7 @@ QObject *AppSettings::Get(QQmlEngine *, QJSEngine *)
 
 int AppSettings::dimension() const
 {
-    return settings_.value("dimension", 4).toInt();
-}
-
-ImageProviderType AppSettings::imageProvider() const
-{
-    auto type = ImageProviderTypeClass::fromVariant(
-        settings_.value("imageProvider", ImageProviderType::Flickr));
-
-    // check if type is valid
-    type = ImageProviderTypeClass::isValid(type)
-               ? type
-               : ImageProviderType::Flickr;
-
-    return type;
+    return settings_.value(Cnst::dimension, 4).toInt();
 }
 
 void AppSettings::setDimension(int dimension)
@@ -51,8 +50,23 @@ void AppSettings::setDimension(int dimension)
     if (this->dimension() == dimension)
         return;
 
-    settings_.setValue("dimension", dimension);
+    settings_.setValue(Cnst::dimension, dimension);
     emit sigDimensionChanged(dimension);
+}
+
+AppSettings::ImageProviderType AppSettings::imageProvider()
+{
+    static const auto defaultType = ImageProviderType::Flickr;
+
+    auto type = ImageProviderTypeClass::fromVariant(
+        settings_.value(Cnst::imageProvider, defaultType));
+
+    if (! ImageProviderTypeClass::isValid(type)) {
+        settings_.setValue(Cnst::imageProvider, defaultType);
+        type = defaultType;
+    }
+
+    return type;
 }
 
 void AppSettings::setImageProvider(ImageProviderType imageProvider)
@@ -60,7 +74,7 @@ void AppSettings::setImageProvider(ImageProviderType imageProvider)
     if (this->imageProvider() == imageProvider)
         return;
 
-    settings_.setValue("imageProvider", imageProvider);
+    settings_.setValue(Cnst::imageProvider, imageProvider);
     emit sigImageProviderChanged(imageProvider);
 }
 
@@ -68,7 +82,7 @@ bool AppSettings::isValid() const
 {
     if (! settings_.isWritable() || settings_.status() != QSettings::Status::NoError) {
         DEBUG(settings_.status() << settings_.isWritable());
-        //emit sigSettingsError(QString() + settings_.status());
+        return false;
     }
     return true;
 }

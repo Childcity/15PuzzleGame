@@ -2,7 +2,7 @@
 #include "main.h"
 #include "Net/networkerror.h"
 
-#include <QPoint>
+#include <QSize>
 #include <QVector>
 #include <algorithm>
 #include <random>
@@ -11,55 +11,49 @@
 namespace Dal {
 
 
-Board::Board(int dimension, QObject *parent) noexcept
+Board::Board(QObject *parent) noexcept
+    : QObject(parent)
+    , dimension_(-1)
+    , imageProviderType_(Image::ImageProviderType::Invalid)
+    , boardElements_(0)
+{
+}
+
+Board::Board(int dimension, Image::ImageProviderType imageProviderType, QObject *parent) noexcept
     : QObject(parent)
     , dimension_(dimension)
+    , imageProviderType_(imageProviderType)
     , boardElements_(dimension * dimension)
 {
-    // get Async images for board
-    {
-        connect(
-            &imgController_, &Image::BoardImageController::sigBoardImagesReady,
-            this, [this] {
-                std::vector<QByteArray> imgs;
-
-                try {
-                    // move result from async task to vector
-                    imgs = imgController_.getBoardImagesAcyncResult();
-                } catch (Net::NetworkError &ex) {
-                    emit sigCachingError(ex.what());
-                    return;
-                }
-
-                assert(static_cast<int>(imgs.size()) == boardElements_.size());
-
-                // update boardElements_ with new images
-                for (auto &tile : boardElements_) {
-                    if (tile.Value == hiddenValue())
-                        continue;
-
-                    size_t isz = static_cast<size_t>(tile.Value - 1); // get index of image for current tile
-                    tile.Image = std::move(imgs[isz]);
-                }
-
-                emit sigImagesCached();
-            },
-            Qt::QueuedConnection);
-
-        // run acync task
-        imgController_.getBoardImagesAsync({ dimension_, dimension_ });
-    }
-
-    // fill with 1,2,3,4,5,...,0
-    std::iota(boardElements_.begin(), boardElements_.end(), 1);
-    boardElements_.last().Value = hiddenValue();
-
-    shaffleBoard();
+    reset();
 }
 
 Board::~Board()
 {
     DEBUG("~Board");
+}
+
+void Board::reset()
+{
+    if (! isValid()) {
+        return;
+    }
+
+    // get Async images for board
+    {
+        imgController_ = std::make_unique<Image::BoardImageController>();
+        connect(&*imgController_, &Image::BoardImageController::sigBoardImagesReady,
+                this, &Board::slotImageReady, Qt::QueuedConnection);
+
+        // run acync task
+        imgController_->getBoardImagesAsync({ dimension_, dimension_ }, imageProviderType_);
+    }
+
+    // fill with 1,2,3,4,5,...,0
+    std::iota(boardElements_.begin(), boardElements_.end(), 1);
+    boardElements_.back().Value = hiddenValue();
+
+    shaffleBoard();
 }
 
 void Board::move(int index)
@@ -87,7 +81,7 @@ void Board::move(int index)
     assert(count != 0);
 
     count = std::abs(count);
-    shift2D(boardElements_, hiddenPos, count, direction);
+    shift2D(hiddenPos, count, direction);
 }
 
 int Board::tilesNumber() const
@@ -98,6 +92,11 @@ int Board::tilesNumber() const
 int Board::dimension() const
 {
     return dimension_;
+}
+
+Image::ImageProviderType Board::imageProviderType() const
+{
+    return imageProviderType_;
 }
 
 int Board::hiddenValue() const
@@ -117,17 +116,51 @@ bool Board::isMovable(Board::Position pos, Board::Position hidPos) const
 
 bool Board::isMovable(int index) const
 {
-    return index >= 0 && index < boardElements_.size() && isMovable(getRowCol(index), getRowCol(hiddenIndex()));
+    return index >= 0 && static_cast<size_t>(index) < boardElements_.size() &&
+           isMovable(getRowCol(index), getRowCol(hiddenIndex()));
 }
 
 bool Board::isGameWon() const
 {
-    return boardElements_.first().Value != hiddenValue() && std::is_sorted(boardElements_.begin(), boardElements_.end() - 1);
+    return isValid() && boardElements_.front().Value != hiddenValue() &&
+           std::is_sorted(boardElements_.cbegin(), boardElements_.cend() - 1);
 }
 
-Dal::TileData Board::operator[](int index)
+bool Board::isValid() const
+{
+    return dimension_ > 0 &&
+           imageProviderType_ != Image::ImageProviderType::Invalid &&
+           boardElements_.size() > 0;
+}
+
+TileData Board::operator[](int index)
 {
     return boardElements_[index];
+}
+
+void Board::slotImageReady()
+{
+    std::vector<QByteArray> imgs;
+
+    try {
+        imgs = imgController_->getBoardImagesAcyncResult();
+    } catch (Net::NetworkError &ex) {
+        emit sigCachingError(ex.what());
+        return;
+    }
+
+    assert(imgs.size() == boardElements_.size());
+
+    // update boardElements_ with new images
+    for (auto &tile : boardElements_) {
+        if (tile.Value == hiddenValue())
+            continue;
+
+        size_t isz = static_cast<size_t>(tile.Value - 1); // get index of image for current tile
+        tile.Image = std::move(imgs[isz]);
+    }
+
+    emit sigImagesCached();
 }
 
 Board::Position Board::getRowCol(int index) const
@@ -154,10 +187,10 @@ void Board::shaffleBoard()
 bool Board::isBoardSolvable() const
 {
     // Count inversions in given puzzle
-    int invCount = 0;
-    for (int i = 0; i < boardElements_.size() - 1; i++)
+    size_t invCount = 0;
+    for (size_t i = 0; i < boardElements_.size() - 1; i++)
     {
-        for (int j = i + 1; j < boardElements_.size(); j++)
+        for (size_t j = i + 1; j < boardElements_.size(); j++)
         {
             // count pairs(i, j) such that i appears
             // before j, but i > j.
@@ -186,15 +219,15 @@ bool Board::isBoardSolvable() const
 int Board::findHiddenIndex() const
 {
     // find and update hidden index
-    const auto it = std::find(boardElements_.begin(), boardElements_.end(), TileData(hiddenValue()));
-    assert(it != boardElements_.end());
-    return static_cast<int>(std::distance(boardElements_.begin(), it));
+    const auto it = std::find(boardElements_.cbegin(), boardElements_.cend(), TileData(hiddenValue()));
+    assert(it != boardElements_.cend());
+    return static_cast<int>(std::distance(boardElements_.cbegin(), it));
 }
 
-void Board::shift2D(QVector<Dal::TileData> &vec, Board::Position strtPos, int count, Board::ShiftDirection direction)
+void Board::shift2D(const Board::Position strtPos, int count, Board::ShiftDirection direction)
 {
-    int row, col;
-    std::tie(row, col) = strtPos;
+    const auto &[row, col] = strtPos;
+    auto &vec = boardElements_;
 
     assert(row < dimension_);
     assert(col < dimension_);
