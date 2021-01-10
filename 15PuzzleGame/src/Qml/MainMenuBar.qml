@@ -27,15 +27,24 @@ ToolBar {
 
     RowLayout {
         ToolButton {
+            id: fileMenuHeader
             Layout.preferredHeight: root.height
+            down: undefined
             text: qsTr("File")
-            onClicked: fileMenu.popup(root.parent, x + root.leftPadding, 0)
+            onClicked: {
+                fileMenuHeader.down = true;
+                fileMenu.popup(root.parent, x + root.leftPadding, 0);
+            }
         }
         ToolButton {
-            id: editTool
+            id: editMenuHeader
             Layout.preferredHeight: root.height
+            down: undefined
             text: qsTr("Edit")
-            onClicked: editMenu.popup(root.parent, x + root.leftPadding, 0)
+            onClicked: {
+                editMenuHeader.down = true
+                editMenu.popup(root.parent, x + root.leftPadding, 0)
+            }
         }
         Item {
             Layout.fillHeight: true
@@ -50,6 +59,8 @@ ToolBar {
         implicitHeight: contentItem.implicitHeight + 2 * menuPading
         enter: enterAnimation
 
+        onClosed: fileMenuHeader.down = undefined
+
         MenuItem {
             implicitHeight: menuItemHeight
             text: qsTr("Quit");
@@ -62,6 +73,8 @@ ToolBar {
         implicitWidth: menuWidth
         enter: enterAnimation
         padding: menuPading
+
+        onClosed: editMenuHeader.down = undefined
 
         Menu {
             id: imgProvider
